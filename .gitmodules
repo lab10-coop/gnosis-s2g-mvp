@@ -1,0 +1,3 @@
+[submodule "submodules/security2go"]
+	path = submodules/security2go
+	url = git@code.lab10.io:graz/04-artis/smartcard/security2go.git
