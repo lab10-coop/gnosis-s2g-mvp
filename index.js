@@ -2,8 +2,19 @@
 var pcsc = require('pcsclite');
 var Security2GoCard = require('./submodules/security2go/index'); 
 var Web3 = require('web3');
+var express = require('express');
+var app = express();
+var path = require('path');
 
 var pcsc = pcsc();
+
+
+// viewed at http://localhost:8080
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname + '/index.html'));
+});
+
+app.listen(8080);
 
 //var test = new TestSigner.TestSigner();
 //test.testSigning();
@@ -30,14 +41,13 @@ async function doSomeTests(reader) {
     console.log('address1: ' + address1);
 
     var tx = {
-        // nonce: '0x00',
-            gasPrice: 1000000000,
-            gasLimit: '0x50000',
-            to: '0x206733350894454c4684e8D694bf391228fCCbEE',
-            value: 1000000000000000,
-            data: '0x'
-        };
-    
+        gasPrice: 1000000000,
+        gasLimit: '0x50000',
+        to: '0x206733350894454c4684e8D694bf391228fCCbEE',
+        value: 1000000000000000,
+        data: '0x'
+    };
+
     var receipt = await card.signAndSendTransaction(web3, tx, 1);
     console.log(receipt);
 }
@@ -86,3 +96,9 @@ pcsc.on('reader', function(reader) {
 pcsc.on('error', function(err) {
     console.log('PCSC error', err.message);
 });
+
+
+//header( 'refresh: 5; url=http://www.example.net' );
+
+
+
