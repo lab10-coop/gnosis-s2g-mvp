@@ -165,7 +165,7 @@ async function deployContract(web3, contractName) {
     let rawTx = {
         nonce: nonceHex,
         gasPrice: 1000000000,
-        gasLimit: 8000000,
+        gasLimit: 6721975, // <- Ganache hardcoded gas limit
         data: encodedData,
         from: address
     };
