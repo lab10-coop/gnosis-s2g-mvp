@@ -1,3 +1,6 @@
 [submodule "submodules/security2go"]
 	path = submodules/security2go
 	url = git@code.lab10.io:graz/04-artis/smartcard/security2go.git
+[submodule "submodules/safe-contracts"]
+	path = submodules/safe-contracts
+	url = git@github.com:gnosis/safe-contracts.git

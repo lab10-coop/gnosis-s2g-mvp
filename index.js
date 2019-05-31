@@ -5,7 +5,7 @@ var Web3 = require('web3');
 var express = require('express');
 var app = express();
 var path = require('path');
-
+var deploySafe = require('./deploySafe.js');
 var pcsc = pcsc();
 
 
@@ -16,6 +16,11 @@ app.get('/', function(req, res) {
 
 app.listen(8080);
 
+//var web3 = new Web3('http://127.0.0.1:9545/');
+var web3 = new Web3('ws://ws.tau1.artis.network');
+
+deploySafe.deployNewSafe(web3);
+
 //var test = new TestSigner.TestSigner();
 //test.testSigning();
 
@@ -25,9 +30,6 @@ async function doSomeTests(reader) {
     let card = new Security2GoCard.Security2GoCard();
     card.log_debug_signing = true;
     card.log_debug_web3 = true;
-    //var web3 = new Web3('ws://ws.tau1.artis.network');
-
-    var web3 = new Web3('http://127.0.0.1:9545/');
 
     card.initialize(reader);
     console.log("card ready");
