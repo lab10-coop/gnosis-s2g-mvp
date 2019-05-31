@@ -8,18 +8,33 @@ var path = require('path');
 var deploySafe = require('./deploySafe.js');
 var pcsc = pcsc();
 
+var currentData = {};
+
+
+currentData.currentGnosisSafeAddress = '0xC59791222C5513995AAE19283af5Fc3b3B4595Ce'
 
 // viewed at http://localhost:8080
 app.get('/', function(req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-app.listen(8080);
+app.get('/index_client.js', function(req, res) {
+    console.log('getting index_client.js')
+    res.sendFile(path.join(__dirname + '/index_client.js'));
+});
 
-//var web3 = new Web3('http://127.0.0.1:9545/');
-var web3 = new Web3('ws://ws.tau1.artis.network');
+app.get('/currentData.json', function(req, res) {
+    console.log('getting currentData')
+    res.send(JSON.stringify(currentData));
+});
 
-deploySafe.deployNewSafe(web3);
+
+app.listen(3000);
+
+var web3 = new Web3('http://127.0.0.1:9545/');
+//var web3 = new Web3('ws://ws.tau1.artis.network');
+
+//deploySafe.deployNewSafe(web3);
 
 //var test = new TestSigner.TestSigner();
 //test.testSigning();
@@ -38,19 +53,19 @@ async function doSomeTests(reader) {
 
     //web3.eth.sendTransaction({from:web3.eth.getAccounts()[1], to: '0x756269Ce7e0285670ecBD234f230645EfBa049D3', value: 1000000000000000})
     
-    const address1 = await card.getAddress(1);
+    //const address1 = await card.getAddress(1);
 
-    console.log('address1: ' + address1);
+    //console.log('address1: ' + address1);
 
-    var tx = {
-        gasPrice: 1000000000,
-        gasLimit: '0x50000',
-        to: '0x206733350894454c4684e8D694bf391228fCCbEE',
-        value: 1000000000000000,
-        data: '0x'
-    };
+    // var tx = {
+    //     gasPrice: 1000000000,
+    //     gasLimit: '0x50000',
+    //     to: '0x206733350894454c4684e8D694bf391228fCCbEE',
+    //     value: 1000000000000000,
+    //     data: '0x'
+    // };
 
-    var receipt = await card.signAndSendTransaction(web3, tx, 1);
+    //var receipt = await card.signAndSendTransaction(web3, tx, 1);
     console.log(receipt);
 }
 
