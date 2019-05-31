@@ -165,7 +165,7 @@ async function deployContract(web3, contractName) {
     let rawTx = {
         nonce: nonceHex,
         gasPrice: 1000000000,
-        gasLimit: '0x600000',
+        gasLimit: 8000000,
         data: encodedData,
         from: address
     };
@@ -179,40 +179,12 @@ async function deployContract(web3, contractName) {
     let receipt = null;
 
     // Submit the smart contract deployment transaction
-    txResult = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'), (err, hash) => {
-        if (err) { 
-            console.log(err); return; 
-        }
+    txResult = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
     
-        // Log the tx, you can explore status manually with eth.getTransaction()
-        console.log('Contract creation tx: ' + hash);
-    
-        // Wait for the transaction to be mined
-        while (receipt == null) {
-
-            receipt = web3.eth.getTransactionReceipt(hash);
-
-            // Simulate the sleep function
-            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
-        }
-
-        console.log('Contract address: ' + receipt.contractAddress);
-        console.log('Contract File: ' + contractName);
-
-        // // Update JSON
-        // jsonOutput['contracts'][contract]['contractAddress'] = receipt.contractAddress;
-
-        // let formattedJson = JSON.stringify(jsonOutput, null, 4);
-        
-        // //console.log(formattedJson);
-        // fs.writeFileSync(jsonFile, formattedJson);
-
-        //console.log('==============================');
-    
-    });
-    
-    console.log('ContractAddress: ' + txResult);
-
+    //console.log('ContractAddress: ' + txResult);
+    //console.log(txResult);
+    //console.log('ca:');
+    // console.log(txResult.contractAddress);
     return txResult.contractAddress;
 }
 
