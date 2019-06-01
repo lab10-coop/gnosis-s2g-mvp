@@ -25,6 +25,11 @@ window.setInterval(function(){
     jsonDisplay.value = currentDataJson;
 }, 500);
 
+function deployNewGnosisSafe()  {
+    getJSON("./deployNewGnosisSave.json", function(err, data) {
+       console.log("deployNewGnosisSave started!", data);
+    });    
+}
 
 function loadCurrentData() {
 

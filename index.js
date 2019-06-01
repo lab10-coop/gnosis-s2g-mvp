@@ -11,10 +11,7 @@ var pcsc = pcsc();
 var currentData = {};
 
 //states:
-
 // deploy -> deploying -> deployed -> setupSafe -> settingUpSafe -> SafeReady -> sendingOutFunds -> sentOutFunds.
-
-
 
 const STATE_DEPLOY = 'deploy'
 const STATE_DEPLOYING = 'deploying'
@@ -55,11 +52,11 @@ app.get('/settingUpSafe.json', function(req, res) {
     res.send(JSON.stringify(currentData));
 });
 
-// app.get('/deployNewSafe.json',async function(req, res) {
-//     console.log('deployNewSafe.json')
-//     const newSafeAddress = deployNewSafe();
-//     res.send(JSON.stringify(currentData));
-// });
+app.get('/deployNewGnosisSave.json',async function(req, res) {
+    console.log('deployNewGnosisSave.json')
+    const newSafeAddress = deployNewSafe();
+    res.send(JSON.stringify(currentData));
+});
 
 
 app.listen(3000);
@@ -78,12 +75,15 @@ async function setupSafe() {
 }
 
 async function deployNewSafe() {
+    currentData.state = STATE_DEPLOYING;;
     const addressOfLastSafe = await deploySafe.deployNewSafe(web3);
-    //currentData.state = ''
+    currentData.state = STATE_DEPLOYED;
+    currentData.currentGnosisSafeAddress = addressOfLastSafe;
+    currentData.collectedSafeAddresses = [];
+    currentData.lastError = '';
     console.log(addressOfLastSafe);
     console.log(typeof addressOfLastSafe);
     console.log(JSON.stringify(addressOfLastSafe));
-
 }
 
 function newCard(reader) {
