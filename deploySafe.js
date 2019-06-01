@@ -116,12 +116,73 @@ async function deployNewSafe(web3) {
 // }
 // start();
 
+
+
+let privateKey = Buffer.from("9c94b9956c6085cf2c649333200452f478b1f330dcf5e6eb26b38fb7644e2f36", "hex");
+let privateKey_address = "0x9a973d7C126041a87362aD2De13d35ec9ab35341";
+
+
+async function setupSafe(web3, gnosisSafeAddress, addresses) {
+
+    const contractName = 'GnosisSafe'
+    const jsonOutputName = path.parse(contractName).name + '.json';
+    const jsonFile = './contracts/build/' + jsonOutputName;
+
+    // Read the JSON file contents
+    const contractJsonContent = fs.readFileSync(jsonFile, 'utf8');    
+    const jsonOutput = JSON.parse(contractJsonContent);
+
+    //console.log(jsonOutput);
+    // Retrieve the ABI 
+    const abi = jsonOutput.abi;
+    const gnosisSafeContract =  new web3.eth.Contract(abi, gnosisSafeAddress);
+    const zeroAddress = '0x0000000000000000000000000000000000000000';
+    const setupEncodedAbi = gnosisSafeContract.methods.setup(addresses, addresses.length,  zeroAddress/* to */, '0x0' /* data */, zeroAddress /* address paymentToken */, '0x0' /*uint256 payment*/,zeroAddress /*address payable paymentReceiver*/).encodeABI();
+
+    console.log('got encodedAbi for setup call: ' + setupEncodedAbi)
+    const sendResult = await sendTx(web3, gnosisSafeAddress, setupEncodedAbi);
+    console.log('got result: ' + sendResult);
+
+
+    //const setupPE =setupFunction.send({} , function(txHash) { console.log('setupSafe TX: ' + txHash) });
+
+
+}
+
+async function sendTx(web3, address,  encodedAbi) {
+
+    const nonceHex = web3.utils.toHex(await web3.eth.getTransactionCount(privateKey_address));
+
+    console.log('nonceHex:' + nonceHex);
+
+    // Prepare the raw transaction information
+    let rawTx = {
+        nonce: nonceHex,
+        gasPrice: 1000000000,
+        gasLimit: 6721975, // <- Ganache hardcoded gas limit
+        data: encodedAbi,
+        from: privateKey_address,
+        to: address
+    };
+
+    let tx = new Tx(rawTx);
+
+    // Sign the transaction 
+    tx.sign(privateKey);
+    let serializedTx = tx.serialize();
+
+    // Submit the smart contract deployment transaction
+    txResult = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
+    
+    //console.log('ContractAddress: ' + txResult);
+    //console.log(txResult);
+    //console.log('ca:');
+    // console.log(txResult.contractAddress);
+    return txResult;
+}
+
 async function deployContract(web3, contractName) {
 
-    let privateKey = Buffer.from("9c94b9956c6085cf2c649333200452f478b1f330dcf5e6eb26b38fb7644e2f36", "hex");
-    let address = "0x9a973d7C126041a87362aD2De13d35ec9ab35341";
-
-    
     // It will read the ABI & byte code contents from the JSON file in ./build/contracts/ folder
     let jsonOutputName = path.parse(contractName).name + '.json';
     let jsonFile = './contracts/build/' + jsonOutputName;
@@ -144,8 +205,6 @@ async function deployContract(web3, contractName) {
 
     let encodedData = deployedContract.encodeABI();
    
-
-
     // Prepare the smart contract deployment payload
     // If the smart contract constructor has mandatory parameters, you supply the input parameters like below 
     //
@@ -194,6 +253,7 @@ exports.Web3 = Web3;
 exports.web3 = web3;
 exports.safe = safe;
 exports.deployNewSafe = deployNewSafe;
+exports.setupSafe = setupSafe;
 
 /*
 exports = {
