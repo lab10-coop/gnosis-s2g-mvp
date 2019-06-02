@@ -15,8 +15,38 @@
 
 <body>
     <div class="container">
-        <Button>Deploy new Gnosis Safe</Button>
+
+            <!-- //deploy: waits for a card that is used to sign off the deploy transaction.
+            const STATE_DEPLOY = 'deploy'
+            //deploying: a new safe is about to be deployed.
+            const STATE_DEPLOYING = 'deploying'
+            //a new safe just got deployed, user need to continue with setup the addresses for multisig.
+            const STATE_DEPLOYED = 'deployed'
+            //system collects now the card addresses for setting up a safe.
+            const STATE_SETUPSAFE = 'setupSafe'
+            
+            const STATE_SETTINGUPSAFE = 'settingUpSafe' 
+            const STATE_SAFEREADY = 'safeready' -->
+
+        <div>
+            <div style="display: inline">deploy</div>
+            <div style="display: inline">deploying</div>
+            <div style="display: inline">deployed</div>
+            <div style="display: inline">setupSafe</div>
+            <div style="display: inline">settingUpSafe</div>
+            <div style="display: inline">safeready</div>
+        </div>
+        <div style="text-align:center;">
+            <h2 id="mainMessageHeadline">Do something!</h2>
+        </div>
+        <div>
+            <Button onclick="deployNewGnosisSafe()">Deploy a new Gnosis Safe</Button>
+            
+        </div>
+        <ul id="ulCollectedSafeAddresses">
+        </ul>
         <textarea id="jsonDisplay" rows="20" cols="150"></textarea>
+        <Button id="setupThisGnosisSafe" onclick="settingUpSafeGnosisSafe()">Setup this gnosis Safe!</Button>
     </div>
 </body>
 </html>

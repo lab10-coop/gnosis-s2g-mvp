@@ -122,8 +122,7 @@ let privateKey = Buffer.from("9c94b9956c6085cf2c649333200452f478b1f330dcf5e6eb26
 let privateKey_address = "0x9a973d7C126041a87362aD2De13d35ec9ab35341";
 
 
-async function setupSafe(web3, gnosisSafeAddress, addresses) {
-
+function createGnosisSafeObject(web3, gnosisSafeAddress) {
     const contractName = 'GnosisSafe'
     const jsonOutputName = path.parse(contractName).name + '.json';
     const jsonFile = './contracts/build/' + jsonOutputName;
@@ -135,22 +134,31 @@ async function setupSafe(web3, gnosisSafeAddress, addresses) {
     //console.log(jsonOutput);
     // Retrieve the ABI 
     const abi = jsonOutput.abi;
-    const gnosisSafeContract =  new web3.eth.Contract(abi, gnosisSafeAddress);
+    return new web3.eth.Contract(abi, gnosisSafeAddress);
+}
+
+
+async function setupSafe(web3, gnosisSafeAddress, addresses, card) {
+
+    const gnosisSafeContract =  createGnosisSafeObject(web3, gnosisSafeAddress);
     const zeroAddress = '0x0000000000000000000000000000000000000000';
     const setupEncodedAbi = gnosisSafeContract.methods.setup(addresses, addresses.length,  zeroAddress/* to */, '0x0' /* data */, zeroAddress /* address paymentToken */, '0x0' /*uint256 payment*/,zeroAddress /*address payable paymentReceiver*/).encodeABI();
 
     console.log('got encodedAbi for setup call: ' + setupEncodedAbi)
-    const sendResult = await sendTx(web3, gnosisSafeAddress, setupEncodedAbi);
-    console.log('got result: ' + sendResult);
+    const sendResult = await sendTx(web3, gnosisSafeAddress, setupEncodedAbi, card);
+    console.log('got result: ');
+    console.log(sendResult);
 
+    return sendResult;
 
     //const setupPE =setupFunction.send({} , function(txHash) { console.log('setupSafe TX: ' + txHash) });
 
 
 }
 
-async function sendTx(web3, address,  encodedAbi) {
+async function sendTx(web3, toAddress,  encodedAbi, card) {
 
+    const cardKeyIndex = 1;
     const nonceHex = web3.utils.toHex(await web3.eth.getTransactionCount(privateKey_address));
 
     console.log('nonceHex:' + nonceHex);
@@ -162,17 +170,20 @@ async function sendTx(web3, address,  encodedAbi) {
         gasLimit: 6721975, // <- Ganache hardcoded gas limit
         data: encodedAbi,
         from: privateKey_address,
-        to: address
+        to: toAddress
     };
 
     let tx = new Tx(rawTx);
 
+
+    const signature = await card.generateSignature(web3, tx, cardKeyIndex);
+
     // Sign the transaction 
-    tx.sign(privateKey);
-    let serializedTx = tx.serialize();
+    // tx.sign(privateKey);
+    // let serializedTx = tx.serialize();
 
     // Submit the smart contract deployment transaction
-    txResult = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
+    txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
     
     //console.log('ContractAddress: ' + txResult);
     //console.log(txResult);
@@ -180,6 +191,7 @@ async function sendTx(web3, address,  encodedAbi) {
     // console.log(txResult.contractAddress);
     return txResult;
 }
+
 
 async function deployContract(web3, contractName, card) {
 
@@ -195,28 +207,13 @@ async function deployContract(web3, contractName, card) {
     //console.log(jsonOutput);
     // Retrieve the ABI 
     let abi = jsonOutput.abi;
-
     // Retrieve the byte code
     let bytecode = jsonOutput.bytecode;
-    
     let contract = new web3.eth.Contract(abi);
-    let contractData = null;
-
     const deployedContract = contract.deploy({data: bytecode});
 
     let encodedData = deployedContract.encodeABI();
-   
-    // Prepare the smart contract deployment payload
-    // If the smart contract constructor has mandatory parameters, you supply the input parameters like below 
-    //
-    // contractData = tokenContract.new.getData( param1, param2, ..., {
-    //    data: '0x' + bytecode
-    // });    
-
-    // contractData = tokenContract.new.getData({
-    //     data: '0x' + bytecode
-    // });
-
+  
     const address = await card.getAddress(cardKeyIndex);
     const nonceHex = web3.utils.toHex(await web3.eth.getTransactionCount(address));
 
@@ -257,7 +254,7 @@ async function deployContract(web3, contractName, card) {
     console.log(txResult.contractAddress);
     
     contract.address = txResult.contractAddress;
-    
+
     return contract;
 }
 
