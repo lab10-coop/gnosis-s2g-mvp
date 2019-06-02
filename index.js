@@ -8,7 +8,7 @@ var path = require('path');
 var deploySafe = require('./deploySafe.js');
 var pcsc = pcsc();
 
-var currentData = {};
+var _currentData = {};
 
 //states:
 // deploy -> deploying -> deployed -> setupSafe -> settingUpSafe -> SafeReady -> sendingOutFunds -> sentOutFunds.
@@ -20,10 +20,11 @@ const STATE_SETUPSAFE = 'setupSafe'
 const STATE_SETTINGUPSAFE = 'settingUpSafe' 
 const STATE_SAFEREADY = 'safeready'
 
-currentData.currentGnosisSafeAddress = '0xC59791222C5513995AAE19283af5Fc3b3B4595Ce'
-currentData.state = STATE_SETUPSAFE
-currentData.collectedSafeAddresses = []; //array of '0xabc..890' string with the addresses that should get added to the safe.
-currentData.lastError = '';
+//_currentData.currentGnosisSafeAddress = '0xC59791222C5513995AAE19283af5Fc3b3B4595Ce'
+_currentData.currentGnosisSafeAddress = '0x31359AD47CB15E34A1cDcc63a68f30610C1d1337'
+_currentData.state = STATE_DEPLOY
+_currentData.collectedSafeAddresses = []; //array of '0xabc..890' string with the addresses that should get added to the safe.
+_currentData.lastError = '';
 
 // viewed at http://localhost:8080
 app.get('/', function(req, res) {
@@ -36,55 +37,55 @@ app.get('/index_client.js', function(req, res) {
 });
 
 app.get('/currentData.json', function(req, res) {
-    console.log('getting currentData')
-    res.send(JSON.stringify(currentData));
+    //console.log('getting currentData')
+    res.send(JSON.stringify(_currentData));
 });
 
 app.get('/settingUpSafe.json', function(req, res) {
-    if (currentData.state === STATE_SETUPSAFE) {
-        if(currentData.collectedSafeAddresses.length == 0) {
-            currentData.lastError = 'There is at minimum 1 address required to initialize a gnosis safe';   
+    if (_currentData.state === STATE_SETUPSAFE) {
+        if(_currentData.collectedSafeAddresses.length == 0) {
+            _currentData.lastError = 'There is at minimum 1 address required to initialize a gnosis safe';   
         } else {
             setupSafe();
-            currentData.lastError = 'There is at minimum 1 address required to initialize a gnosis safe';
+            _currentData.lastError = 'There is at minimum 1 address required to initialize a gnosis safe';
         }
     }    
-    res.send(JSON.stringify(currentData));
+    res.send(JSON.stringify(_currentData));
 });
 
 app.get('/deployNewGnosisSave.json',async function(req, res) {
     console.log('deployNewGnosisSave.json')
     const newSafeAddress = deployNewSafe();
-    res.send(JSON.stringify(currentData));
+    res.send(JSON.stringify(_currentData));
+    _currentData.state = STATE_DEPLOY;
 });
 
 
 app.listen(3000);
 
+
+const web3_options = {
+    transactionConfirmationBlocks: 1,
+    defaultGasPrice: 1000000000,
+    //transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
+}
+//const web3_address = 'ws://ws.tau1.artis.network';
+const web3_address = 'http://127.0.0.1:9545/';
+
+const web3 = new Web3(web3_address, null, web3_options);
 //var web3 = new Web3('http://127.0.0.1:9545/');
-var web3 = new Web3('ws://ws.tau1.artis.network');
 
 async function setupSafe() {
 
     console.log('setting up safe');
-    currentData.state = STATE_SETTINGUPSAFE;
-    const setupSafeResult = await deploySafe.setupSafe(web3, currentData.currentGnosisSafeAddress, currentData.collectedSafeAddresses);
+    _currentData.state = STATE_SETTINGUPSAFE;
+    const setupSafeResult = await deploySafe.setupSafe(web3, _currentData.currentGnosisSafeAddress, _currentData.collectedSafeAddresses);
     console.log('setting up safe done!');
-    console.log(setupSafeResult);
+    _currentData.state = STATE_SAFEREADY;
     return setupSafeResult;
 }
 
-async function deployNewSafe() {
-    currentData.state = STATE_DEPLOYING;;
-    const addressOfLastSafe = await deploySafe.deployNewSafe(web3);
-    currentData.state = STATE_DEPLOYED;
-    currentData.currentGnosisSafeAddress = addressOfLastSafe;
-    currentData.collectedSafeAddresses = [];
-    currentData.lastError = '';
-    console.log(addressOfLastSafe);
-    console.log(typeof addressOfLastSafe);
-    console.log(JSON.stringify(addressOfLastSafe));
-}
+
 
 function newCard(reader) {
     let card = new Security2GoCard.Security2GoCard();
@@ -159,22 +160,17 @@ pcsc.on('reader', function(reader) {
             } else if ((changes & this.SCARD_STATE_PRESENT) && (status.state & this.SCARD_STATE_PRESENT)) {
 
                 const card = newCard(reader);
-                if (currentData.state === STATE_SETUPSAFE){
-                    card.initialize(reader);
-                    const cardAddress = await card.getAddress(1);
-
-                    //if the used address has not been added yet, than add it. it is used later to setup the safe.
-
-                    if (currentData.collectedSafeAddresses.indexOf(cardAddress) === -1){
-                        console.log('Setup Safe: new card Address: ' + cardAddress);
-                        currentData.collectedSafeAddresses.push(cardAddress);
-                    } else {
-                        console.log('Card allready known:' + cardAddress);
-                    }
-
-                    //currentData.collectedSafeAddresses                    
-                } else {
-                    console.error('state not implemented yet: ' + currentData.state);
+                card.initialize(reader);
+                if (_currentData.state === STATE_SETUPSAFE){
+                    state_setupSave(card);
+                    //_currentData.collectedSafeAddresses                    
+                } else if (_currentData.state === STATE_DEPLOY){
+                    //console.error('state not implemented yet: ' + _currentData.state);
+                    const deploy = state_deploy(card);
+                    console.log('deployed: ' + deploy);
+                }
+                else{
+                    console.error('state not implemented yet: ' + _currentData.state);
                 }
 
                 //doSomeTests(reader);
@@ -192,7 +188,50 @@ pcsc.on('error', function(err) {
     console.log('PCSC error', err.message);
 });
 
+async function state_setupSave(card) {
 
+    const cardAddress = await card.getAddress(1);
+
+    //if the used address has not been added yet, than add it. it is used later to setup the safe.
+
+    if (_currentData.collectedSafeAddresses.indexOf(cardAddress) === -1){
+        console.log('Setup Safe: new card Address: ' + cardAddress);
+        _currentData.collectedSafeAddresses.push(cardAddress);
+    } else {
+        console.log('Card allready known:' + cardAddress);
+    }
+}
+
+async function state_deploy(card)
+{
+    _currentData.state = STATE_DEPLOYING;
+    const deployedSafe = await deploySafe.deployNewSafe(web3, card);
+    console.log('deployedSafe=>');
+    console.log(deployedSafe.address);
+    _currentData.state = STATE_DEPLOYED;
+    _currentData.currentGnosisSafeAddress = deployedSafe.address;
+    _currentData.collectedSafeAddresses = [];
+    _currentData.lastError = '';
+    
+    
+    //console.log(JSON.stringify(addressOfLastSafe));  
+    //console.log(safe)
+}
+
+function printCurrentData() {
+    console.log('currentState:')
+    console.log(_currentData)
+}
+
+function printState() {
+    console.log('printState:')
+    console.log(_currentData.state)
+}
+
+printCurrentData();
+printState();
+console.log("System Ready!")
+printState();
 //header( 'refresh: 5; url=http://www.example.net' );
 
 

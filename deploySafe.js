@@ -29,8 +29,8 @@ function logDebug(message) {
     }
 }
 
-async function deployNewSafe(web3) {
-    await deployContract(web3, 'GnosisSafe');
+async function deployNewSafe(web3, card) {
+    return await deployContract(web3, 'GnosisSafe', card);
 }
 
 // // wrapping the init stuff into an async function in order to have await available
@@ -181,8 +181,9 @@ async function sendTx(web3, address,  encodedAbi) {
     return txResult;
 }
 
-async function deployContract(web3, contractName) {
+async function deployContract(web3, contractName, card) {
 
+    const cardKeyIndex = 1;
     // It will read the ABI & byte code contents from the JSON file in ./build/contracts/ folder
     let jsonOutputName = path.parse(contractName).name + '.json';
     let jsonFile = './contracts/build/' + jsonOutputName;
@@ -216,6 +217,7 @@ async function deployContract(web3, contractName) {
     //     data: '0x' + bytecode
     // });
 
+    const address = await card.getAddress(cardKeyIndex);
     const nonceHex = web3.utils.toHex(await web3.eth.getTransactionCount(address));
 
     console.log('nonceHex:' + nonceHex);
@@ -232,19 +234,31 @@ async function deployContract(web3, contractName) {
     let tx = new Tx(rawTx);
 
     // Sign the transaction 
-    tx.sign(privateKey);
+    //tx.sign(privateKey);
+    
     let serializedTx = tx.serialize();
 
     let receipt = null;
 
+    const signature = await card.generateSignature(web3, tx, cardKeyIndex);
+
+    console.log(signature);
+    console.log('hex');
+    console.log(signature.toString('hex'));
+
+    //logDebug(signature);
     // Submit the smart contract deployment transaction
-    txResult = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
+    //txResult = await web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'));
+    txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
+
+    console.log('ContractAddress: ' + txResult);
+    console.log(txResult);
+    console.log('ca:');
+    console.log(txResult.contractAddress);
     
-    //console.log('ContractAddress: ' + txResult);
-    //console.log(txResult);
-    //console.log('ca:');
-    // console.log(txResult.contractAddress);
-    return txResult.contractAddress;
+    contract.address = txResult.contractAddress;
+    
+    return contract;
 }
 
 

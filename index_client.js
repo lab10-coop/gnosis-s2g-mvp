@@ -28,7 +28,7 @@ window.setInterval(function(){
 function deployNewGnosisSafe()  {
     getJSON("./deployNewGnosisSave.json", function(err, data) {
        console.log("deployNewGnosisSave started!", data);
-    });    
+    });
 }
 
 function loadCurrentData() {
