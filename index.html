@@ -14,7 +14,7 @@
 </script>
 
 <body>
-    <div class="container">
+    <div class="container" style="align-items: center;text-align: center">
 
             <!-- //deploy: waits for a card that is used to sign off the deploy transaction.
             const STATE_DEPLOY = 'deploy'
@@ -27,26 +27,33 @@
             
             const STATE_SETTINGUPSAFE = 'settingUpSafe' 
             const STATE_SAFEREADY = 'safeready' -->
-
-        <div>
+        
+        <div style="text-align: center">
             <div style="display: inline">deploy</div>
             <div style="display: inline">deploying</div>
             <div style="display: inline">deployed</div>
+            <div style="display: inline">collectingMultiSigAddresses</div>
             <div style="display: inline">setupSafe</div>
             <div style="display: inline">settingUpSafe</div>
             <div style="display: inline">safeready</div>
         </div>
+        <Button onclick="deployNewGnosisSafe()" style="width:80%">Deploy a new Gnosis Safe</Button>
         <div style="text-align:center;">
             <h2 id="mainMessageHeadline">Do something!</h2>
         </div>
         <div>
-            <Button onclick="deployNewGnosisSafe()">Deploy a new Gnosis Safe</Button>
+            
             
         </div>
-        <ul id="ulCollectedSafeAddresses">
-        </ul>
-        <textarea id="jsonDisplay" rows="20" cols="150"></textarea>
-        <Button id="setupThisGnosisSafe" onclick="settingUpSafeGnosisSafe()">Setup this gnosis Safe!</Button>
+        <div>
+            <ul id="ulCollectedSafeAddresses">
+            </ul>
+        </div>
+        <Button id="setupThisGnosisSafe" style="width:80%" onclick="settingUpSafeGnosisSafe()">Setup this gnosis Safe!</Button>
+        <br/>
+        <br/>
+        <br/>
+        <textarea id="jsonDisplay" rows="10" cols="100"></textarea>
     </div>
 </body>
 </html>

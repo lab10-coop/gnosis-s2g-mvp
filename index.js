@@ -91,9 +91,13 @@ async function setupSafe(card) {
     console.log('setting up safe');
     _currentData.state = STATE_SETTINGUPSAFE;
     const setupSafeResult = await deploySafe.setupSafe(web3, _currentData.currentGnosisSafeAddress, _currentData.collectedSafeAddresses, card);
-    console.log('setting up safe done!');
-    _currentData.state = STATE_SAFEREADY;
-    return setupSafeResult;
+    
+    if (setupSafeResult) {
+        console.log('setting up safe done!');
+        _currentData.state = STATE_SAFEREADY;
+        return setupSafeResult;
+    }
+    
 }
 
 
