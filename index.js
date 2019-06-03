@@ -29,7 +29,7 @@ const STATE_SETTINGUPSAFE = 'settingUpSafe'
 const STATE_SAFEREADY = 'safeready'
 
 //_currentData.currentGnosisSafeAddress = '0xC59791222C5513995AAE19283af5Fc3b3B4595Ce'
-_currentData.currentGnosisSafeAddress = '0x31359AD47CB15E34A1cDcc63a68f30610C1d1337'
+_currentData.currentGnosisSafeAddress = ''
 _currentData.state = STATE_DEPLOY
 _currentData.collectedSafeAddresses = []; //array of '0xabc..890' string with the addresses that should get added to the safe.
 _currentData.lastError = '';
@@ -80,8 +80,9 @@ const web3_options = {
     defaultGasPrice: 1000000000,
     //transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
 }
-//const web3_address = 'ws://ws.tau1.artis.network';
-const web3_address = 'http://127.0.0.1:9545/';
+
+const web3_address = 'ws://ws.tau1.artis.network';
+//const web3_address = 'http://127.0.0.1:9545/';
 
 const web3 = new Web3(web3_address, null, web3_options);
 //var web3 = new Web3('http://127.0.0.1:9545/');

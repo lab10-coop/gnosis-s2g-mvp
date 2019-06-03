@@ -108,4 +108,4 @@ loadCurrentData();
 window.setInterval(function(){
     loadCurrentData();
     updateUI();
-}, 500);
+}, 200);
