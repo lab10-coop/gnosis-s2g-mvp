@@ -81,7 +81,8 @@ const web3_options = {
     //transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
 }
 
-const web3_address = 'ws://ws.tau1.artis.network';
+//const web3_address = 'ws://ws.tau1.artis.network';
+const web3_address = 'https://rpc.tau1.artis.network';
 //const web3_address = 'http://127.0.0.1:9545/';
 
 const web3 = new Web3(web3_address, null, web3_options);
