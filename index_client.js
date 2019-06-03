@@ -18,6 +18,7 @@ var getJSON = function(url, callback) {
     xhr.send();
 };
 
+
 function updateUI() {
 
     var jsonDisplay = document.getElementById("jsonDisplay");
@@ -58,6 +59,20 @@ function updateUI() {
     var setupThisGnosisSafe = document.getElementById('setupThisGnosisSafe');
     var showSetupButton = (currentData.state === 'collectingMultiSigAddresses' && currentData.collectedSafeAddresses.length > 0);
     setupThisGnosisSafe.style.visibility = showSetupButton ? 'visible' : 'hidden'
+
+    function setStateMachineStyle(stateName) {
+        const divElement = document.getElementById('status_' + stateName);
+        divElement.style.textDecoration = (currentData.state == stateName) ? 'underline' : 'none'; 
+    }
+
+    setStateMachineStyle('deploy');
+    setStateMachineStyle('deploying');
+    setStateMachineStyle('deployed');
+    setStateMachineStyle('collectingMultiSigAddresses');
+    setStateMachineStyle('setupSafe');
+    setStateMachineStyle('settingUpSafe');
+    setStateMachineStyle('safeready');
+
     //setupThisGnosisSafe.
 }
 
