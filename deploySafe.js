@@ -136,9 +136,8 @@ async function deployContract(web3, contractName, card) {
     let tx = new Tx(rawTx);
     const signature = await card.generateSignature(web3, tx, cardKeyIndex);
 
-    logDebug(signature);
-    logDebug('hex');
-    logDebug(signature.toString('hex'));
+
+    //logDebug(signature.toString('hex'));
 
     txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
 

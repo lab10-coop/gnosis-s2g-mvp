@@ -82,8 +82,10 @@ const web3_options = {
 }
 
 //const web3_address = 'ws://ws.tau1.artis.network';
-const web3_address = 'https://rpc.tau1.artis.network';
+//const web3_address = 'https://rpc.tau1.artis.network';
 //const web3_address = 'http://127.0.0.1:9545/';
+const web3_address = 'https://rpc.sigma1.artis.network';
+
 
 const web3 = new Web3(web3_address, null, web3_options);
 //var web3 = new Web3('http://127.0.0.1:9545/');
@@ -125,22 +127,6 @@ async function doSomeTests(reader) {
 
     card.initialize(reader);
     console.log("card ready");
-    //var address = card.getAddressWeb3(web3,1);
-
-
-    //web3.eth.sendTransaction({from:web3.eth.getAccounts()[1], to: '0x756269Ce7e0285670ecBD234f230645EfBa049D3', value: 1000000000000000})
-    
-    //const address1 = await card.getAddress(1);
-
-    //console.log('address1: ' + address1);
-
-    // var tx = {
-    //     gasPrice: 1000000000,
-    //     gasLimit: '0x50000',
-    //     to: '0x206733350894454c4684e8D694bf391228fCCbEE',
-    //     value: 1000000000000000,
-    //     data: '0x'
-    // };
 
     //var receipt = await card.signAndSendTransaction(web3, tx, 1);
     console.log(receipt);
@@ -261,8 +247,7 @@ function printState() {
 
 printCurrentData();
 printState();
-console.log("System Ready!")
-printState();
+console.log("System Ready!");
 //header( 'refresh: 5; url=http://www.example.net' );
 
 
