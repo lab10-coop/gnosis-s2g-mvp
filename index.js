@@ -34,7 +34,6 @@ _currentData.state = STATE_DEPLOY
 _currentData.collectedSafeAddresses = []; //array of '0xabc..890' string with the addresses that should get added to the safe.
 _currentData.lastError = '';
 
-// viewed at http://localhost:8080
 app.get('/', function(req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
 });
@@ -83,8 +82,8 @@ const web3_options = {
 
 //const web3_address = 'ws://ws.tau1.artis.network';
 //const web3_address = 'https://rpc.tau1.artis.network';
-//const web3_address = 'http://127.0.0.1:9545/';
-const web3_address = 'https://rpc.sigma1.artis.network';
+const web3_address = 'http://127.0.0.1:9545/';
+//const web3_address = 'https://rpc.sigma1.artis.network';
 
 
 const web3 = new Web3(web3_address, null, web3_options);
