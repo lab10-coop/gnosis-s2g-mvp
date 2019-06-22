@@ -52,19 +52,19 @@ function updateUI() {
         mainHeadline.innerText = 'The Gnosis Safe is about to get setup on the blockchain';
     } else if (currentData.state === 'safeready') {
         mainHeadline.innerText = 'The Gnosis Safe is setup and ready, remove card to proced';
-    } else if (currentData.state === 'SafeFundingSetup') {
+    } else if (currentData.state === 'safeFundingSetup') {
         mainHeadline.innerText = 'Choose amount to transfer into the safe, confirm with funded card.';
-    } else if (currentData.state === 'SafeFunding') {
+    } else if (currentData.state === 'safeFunding') {
         mainHeadline.innerText = 'Currency Transfer ongoing, waiting for blockchain confirmation...';
-    } else if (currentData.state === 'SafeFunded') {
+    } else if (currentData.state === 'safeFunded') {
         mainHeadline.innerText = 'Safe is now funded, remove card to proceed';
-    } else if (currentData.state === 'MultiSigSetup') {
+    } else if (currentData.state === 'multiSigSetup') {
         mainHeadline.innerText = 'Choose amount and account to send out funds for a multisig and lay card';
-    } else if (currentData.state === 'MultiSigCollecting') {
+    } else if (currentData.state === 'multiSigCollecting') {
         mainHeadline.innerText = 'Not all cards have signed yet. lay other cards';
-    } else if (currentData.state === 'MultiSigSending') {
+    } else if (currentData.state === 'multiSigSending') {
         mainHeadline.innerText = 'Multisig transfer is processed by the blockchain, please standby';
-    } else if (currentData.state === 'MultiSigSuccess') {
+    } else if (currentData.state === 'multiSigSuccess') {
         mainHeadline.innerText = 'Multisig transfer was successful!';
     } else {
         mainHeadline.innerText = 'state: ' + currentData.state;

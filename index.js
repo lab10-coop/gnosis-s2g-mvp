@@ -1,6 +1,6 @@
 
 var pcsc = require('pcsclite');
-var Security2GoCard = require('./submodules/security2go/index'); 
+var Security2GoCard = require('./submodules/web3-s2g'); 
 var Web3 = require('web3');
 var express = require('express');
 var app = express();
@@ -11,7 +11,9 @@ var pcsc = pcsc();
 var _currentData = {};
 
 //states:
-// deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFunding -> SafeFunded  -> sendingOutFunds -> sentOutFunds (R).
+// deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
+
+
 //                                                                                                     ^                                  ^                                    -
 //                                                                                                     -------------------------------------------------------------------------
 // (R) => Remove card to progress to next state
@@ -31,6 +33,14 @@ const STATE_SETUPSAFE = 'setupSafe'
 
 const STATE_SETTINGUPSAFE = 'settingUpSafe' 
 const STATE_SAFEREADY = 'safeready'
+
+const STATE_SAFEFUNDINGSETUP = 'safeFundingSetup'
+const STATE_SAFEFUNDING = "safeFunding"
+const STATE_SAFEFUNDED = "safeFunded"
+const STATE_MULTISIGSETUP = 'multiSigSetup' 
+const STATE_MULTISIGCOLLECTING = 'multiSigCollecting'
+const STATE_MULTISIGSENDING = 'multiSigSending'
+const STATE_MULTISIGSUCCESS = 'multisigSuccess'
 
 
 //const state_collectingMultisigAddresses
@@ -62,7 +72,7 @@ app.get('/settingUpSafe.json', function(req, res) {
         } else {
             _currentData.state = STATE_SETUPSAFE;
         }
-    }    
+    }
     res.send(JSON.stringify(_currentData));
 });
 
@@ -168,7 +178,13 @@ pcsc.on('reader', function(reader) {
                 });
                 if (_currentData.state === STATE_DEPLOYED ) {
                     _currentData.state = STATE_COLLECTINGMULTISIGADDRESSES
+                } else if (_currentData.state === STATE_SAFEREADY) {
+                    _currentData.state = STATE_SAFEFUNDINGSETUP
+                } else if (_currentData.state === STATE_SAFEFUNDED) {
+                    _currentData.state = STATE_MULTISIGSETUP
+                    //SafeFunded (R) -> MultiSigSetup
                 }
+
             } else if ((changes & this.SCARD_STATE_PRESENT) && (status.state & this.SCARD_STATE_PRESENT)) {
 
                 const card = newCard(reader);
@@ -183,6 +199,12 @@ pcsc.on('reader', function(reader) {
                     console.log('deployed: ' + deploy);
                 } else if (_currentData.state === STATE_SETUPSAFE) {
                     setupSafe(card);
+                } else if (_currentData.state === STATE_SAFEFUNDINGSETUP) {
+                    state_safeFundingSetup(card);
+                } else if ( _currentData.state === STATE_MULTISIGSETUP) {
+                    state_multisigSetup(card);
+                } else if (_currentData.state === STATE_MULTISIGCOLLECTING) {
+                    state_multisigCollecting(card);
                 }
                 else{
                     console.error('state not implemented yet: ' + _currentData.state);
@@ -224,8 +246,8 @@ async function state_collectingMultisigAddresses(card) {
     }
 }
 
-async function state_deploy(card)
-{
+async function state_deploy(card) {
+
     _currentData.state = STATE_DEPLOYING;
     const deployedSafe = await deploySafe.deployNewSafe(web3, card);
     console.log('deployedSafe=>');
@@ -239,6 +261,46 @@ async function state_deploy(card)
     
     //console.log(JSON.stringify(addressOfLastSafe));  
     //console.log(safe)
+}
+
+async function state_safeFundingSetup(card) {
+
+    // Prepare the raw transaction information
+    let tx = {
+        nonce: nonceHex,
+        gasPrice: 1000000000,
+        gasLimit: 21000,
+        value: web3.utils.toWei('1'),
+        to: _currentData.currentGnosisSafeAddress
+    };
+
+    try {
+        const txReceipt = await card.signAndSendTransaction(web3, tx, 1);
+        //todo : check Balance or something ?
+
+        _currentData.state = STATE_SAFEFUNDED;
+    } catch (err) {
+        _currentData.lastError = '';
+    }
+}
+
+async function state_multisigCollecting(card) {
+    
+    let tx = {
+        nonce: nonceHex,
+        gasPrice: 1000000000,
+        gasLimit: 21000,
+        value: web3.utils.toWei('1'),
+        to: _currentData.currentGnosisSafeAddress
+    };
+
+}
+
+async function state_multisigSetup(card) {
+
+    const address = await card.getAddress();
+    _currentData.payoutTarget = address;
+    _currentData.state = STATE_MULTISIGCOLLECTING;
 }
 
 function printCurrentData() {
