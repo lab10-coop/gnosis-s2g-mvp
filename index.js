@@ -11,7 +11,11 @@ var pcsc = pcsc();
 var _currentData = {};
 
 //states:
-// deploy -> deploying -> deployed -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady -> sendingOutFunds -> sentOutFunds.
+// deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFunding -> SafeFunded  -> sendingOutFunds -> sentOutFunds (R).
+//                                                                                                     ^                                  ^                                    -
+//                                                                                                     -------------------------------------------------------------------------
+// (R) => Remove card to progress to next state
+
 
 //deploy: waits for a card that is used to sign off the deploy transaction.
 const STATE_DEPLOY = 'deploy'
@@ -27,6 +31,9 @@ const STATE_SETUPSAFE = 'setupSafe'
 
 const STATE_SETTINGUPSAFE = 'settingUpSafe' 
 const STATE_SAFEREADY = 'safeready'
+
+
+//const state_collectingMultisigAddresses
 
 //_currentData.currentGnosisSafeAddress = '0xC59791222C5513995AAE19283af5Fc3b3B4595Ce'
 _currentData.currentGnosisSafeAddress = ''
@@ -81,8 +88,8 @@ const web3_options = {
 }
 
 //const web3_address = 'ws://ws.tau1.artis.network';
-//const web3_address = 'https://rpc.tau1.artis.network';
-const web3_address = 'http://127.0.0.1:9545/';
+const web3_address = 'https://rpc.tau1.artis.network';
+//const web3_address = 'http://127.0.0.1:9545/';
 //const web3_address = 'https://rpc.sigma1.artis.network';
 
 
