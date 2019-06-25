@@ -37,6 +37,7 @@ function updateUI() {
     }
 
     var mainHeadline = document.getElementById('mainMessageHeadline');
+    var errorLine = document.getElementById('mainMessageErrorLine');
     
     if (currentData.state === 'deploy') {
         mainHeadline.innerText = 'Lay a card to sign creation of a new Gnosis Safe';
@@ -78,6 +79,8 @@ function updateUI() {
         const divElement = document.getElementById('status_' + stateName);
         divElement.style.textDecoration = (currentData.state == stateName) ? 'underline' : 'none'; 
     }
+
+    errorLine.innerText = currentData.lastError;
 
     setStateMachineStyle('deploy');
     setStateMachineStyle('deploying');

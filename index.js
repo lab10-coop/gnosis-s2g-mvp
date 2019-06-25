@@ -1,6 +1,6 @@
 
 var pcsc = require('pcsclite');
-var Security2GoCard = require('./submodules/web3-s2g'); 
+var Security2GoCard = require('./submodules/web3-s2g');
 var Web3 = require('web3');
 var express = require('express');
 var app = express();
@@ -12,18 +12,19 @@ var _currentData = {};
 
 
 
-const debugState_safeReady = {"currentGnosisSafeAddress":"0xf81d752a2E7617C70267aaD8d3Ff927312a369E3","state":"safeReady","collectedSafeAddresses":["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3","0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""};
+const debugState_safeReady = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "safeReady", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
 
 
 
 const debugState_setupSafe = {
-    "currentGnosisSafeAddress":"0xf81d752a2E7617C70267aaD8d3Ff927312a369E3",
-    "state":"setupSafe",
-    "collectedSafeAddresses":["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3","0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],
-    "lastError":"",
-    "multisigPayoutAddress":"",
-    "multisigCollected":{},
-    "multisigTransactionHash":""}
+    "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3",
+    "state": "setupSafe",
+    "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],
+    "lastError": "",
+    "multisigPayoutAddress": "",
+    "multisigCollected": {},
+    "multisigTransactionHash": ""
+}
 
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
@@ -46,13 +47,13 @@ const STATE_COLLECTINGMULTISIGADDRESSES = 'collectingMultiSigAddresses'
 //system collects now the card addresses for setting up a safe.
 const STATE_SETUPSAFE = 'setupSafe'
 
-const STATE_SETTINGUPSAFE = 'settingUpSafe' 
+const STATE_SETTINGUPSAFE = 'settingUpSafe'
 const STATE_SAFEREADY = 'safeReady'
 
 const STATE_SAFEFUNDINGSETUP = 'safeFundingSetup'
 const STATE_SAFEFUNDING = "safeFunding"
 const STATE_SAFEFUNDED = "safeFunded"
-const STATE_MULTISIGSETUP = 'multiSigSetup' 
+const STATE_MULTISIGSETUP = 'multiSigSetup'
 const STATE_MULTISIGCOLLECTING = 'multiSigCollecting'
 const STATE_MULTISIGSENDING = 'multiSigSending'
 const STATE_MULTISIGSUCCESS = 'multisigSuccess'
@@ -74,24 +75,24 @@ _currentData.multisigTransactionHash = '';
 _currentData = debugState_safeReady;
 
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-app.get('/index_client.js', function(req, res) {
+app.get('/index_client.js', function (req, res) {
     console.log('getting index_client.js')
     res.sendFile(path.join(__dirname + '/index_client.js'));
 });
 
-app.get('/currentData.json', function(req, res) {
+app.get('/currentData.json', function (req, res) {
     //console.log('getting currentData')
     res.send(JSON.stringify(_currentData));
 });
 
-app.get('/settingUpSafe.json', function(req, res) {
+app.get('/settingUpSafe.json', function (req, res) {
     if (_currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
-        if(_currentData.collectedSafeAddresses.length == 0) {
-            _currentData.lastError = 'There is at minimum 1 address required to initialize a gnosis safe';   
+        if (_currentData.collectedSafeAddresses.length == 0) {
+            _currentData.lastError = 'There is at minimum 1 address required to initialize a gnosis safe';
         } else {
             _currentData.state = STATE_SETUPSAFE;
         }
@@ -99,7 +100,7 @@ app.get('/settingUpSafe.json', function(req, res) {
     res.send(JSON.stringify(_currentData));
 });
 
-app.get('/deployNewGnosisSave.json',async function(req, res) {
+app.get('/deployNewGnosisSave.json', async function (req, res) {
     console.log('deployNewGnosisSave.json')
     //const newSafeAddress = deployNewSafe();
     _currentData.currentGnosisSafeAddress = undefined
@@ -134,13 +135,13 @@ async function setupSafe(card) {
     console.log('setting up safe');
     _currentData.state = STATE_SETTINGUPSAFE;
     const setupSafeResult = await deploySafe.setupSafe(web3, _currentData.currentGnosisSafeAddress, _currentData.collectedSafeAddresses, card);
-    
+
     if (setupSafeResult) {
         console.log('setting up safe done!');
         _currentData.state = STATE_SAFEREADY;
         return setupSafeResult;
     }
-    
+
 }
 
 
@@ -153,7 +154,7 @@ function newCard(reader) {
     return card;
 }
 
-pcsc.on('reader', function(reader) {
+pcsc.on('reader', function (reader) {
 
     console.log('New reader detected', reader.name);
     //console.log(reader);
@@ -163,25 +164,26 @@ pcsc.on('reader', function(reader) {
     }
 
 
-    reader.on('error', function(err) {
+    reader.on('error', function (err) {
         console.log('Error(', this.name, '):', err.message);
     });
 
-    reader.on('status', async function(status) {
+    reader.on('status', async function (status) {
         console.log('Status(', this.name, '):', status);
         /* check what has changed */
         var changes = this.state ^ status.state;
         if (changes) {
             if ((changes & this.SCARD_STATE_EMPTY) && (status.state & this.SCARD_STATE_EMPTY)) {
                 console.log("card removed");/* card removed */
-                reader.disconnect(reader.SCARD_LEAVE_CARD, function(err) {
+                _currentData.lastError = '';
+                reader.disconnect(reader.SCARD_LEAVE_CARD, function (err) {
                     if (err) {
                         console.log(err);
                     } else {
                         console.log('Disconnected');
                     }
                 });
-                if (_currentData.state === STATE_DEPLOYED ) {
+                if (_currentData.state === STATE_DEPLOYED) {
                     _currentData.state = STATE_COLLECTINGMULTISIGADDRESSES
                 } else if (_currentData.state === STATE_SAFEREADY) {
                     _currentData.state = STATE_SAFEFUNDINGSETUP
@@ -192,26 +194,38 @@ pcsc.on('reader', function(reader) {
 
             } else if ((changes & this.SCARD_STATE_PRESENT) && (status.state & this.SCARD_STATE_PRESENT)) {
 
-                const card = newCard(reader);
-                if (_currentData.state === STATE_COLLECTINGMULTISIGADDRESSES){
-                    //_currentData.state = STATE_SETUPSAFE
-                    state_collectingMultisigAddresses(card);
-                    //_currentData.collectedSafeAddresses                    
-                } else if (_currentData.state === STATE_DEPLOY){
-                    //console.error('state not implemented yet: ' + _currentData.state);
-                    const deploy = state_deploy(card);
-                    console.log('deployed: ' + deploy);
-                } else if (_currentData.state === STATE_SETUPSAFE) {
-                    setupSafe(card);
-                } else if (_currentData.state === STATE_SAFEFUNDINGSETUP) {
-                    state_safeFundingSetup(card);
-                } else if ( _currentData.state === STATE_MULTISIGSETUP) {
-                    state_multisigSetup(card);
-                } else if (_currentData.state === STATE_MULTISIGCOLLECTING) {
-                    state_multisigCollecting(card);
-                }
-                else{
-                    console.error('state not implemented yet: ' + _currentData.state);
+                const stateBackup = Object.assign({}, _currentData);
+                _currentData.lastError = '';
+                try {
+
+                    const card = newCard(reader);
+                    if (_currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
+                        //_currentData.state = STATE_SETUPSAFE
+                        await state_collectingMultisigAddresses(card);
+                        //_currentData.collectedSafeAddresses                    
+                    } else if (_currentData.state === STATE_DEPLOY) {
+                        //console.error('state not implemented yet: ' + _currentData.state);
+                        const deploy = await state_deploy(card);
+                        console.log('deployed: ' + deploy);
+                    } else if (_currentData.state === STATE_SETUPSAFE) {
+                        await setupSafe(card);
+                    } else if (_currentData.state === STATE_SAFEFUNDINGSETUP) {
+                        await state_safeFundingSetup(card);
+                    } else if (_currentData.state === STATE_MULTISIGSETUP) {
+                        await state_multisigSetup(card);
+                    } else if (_currentData.state === STATE_MULTISIGCOLLECTING) {
+                        await state_multisigCollecting(card);
+                    }
+                    else {
+                        console.error('state not implemented yet: ' + _currentData.state);
+                    }
+
+                } catch (err) {
+                    console.error('CAUGHT ERROR:');
+                    _currentData = Object.assign({}, stateBackup);
+                    _currentData.lastError = 'error:' + err;
+                    //_currentData.state = 'error';
+                    console.error(_currentData.lastError);
                 }
 
                 //doSomeTests(reader);
@@ -220,12 +234,12 @@ pcsc.on('reader', function(reader) {
         }
     });
 
-    reader.on('end', function() {
-        console.log('Reader',  this.name, 'removed');
+    reader.on('end', function () {
+        console.log('Reader', this.name, 'removed');
     });
 });
 
-pcsc.on('error', function(err) {
+pcsc.on('error', function (err) {
     console.log('PCSC error', err.message);
 });
 
@@ -242,7 +256,7 @@ async function state_collectingMultisigAddresses(card) {
 
     //if the used address has not been added yet, than add it. it is used later to setup the safe.
 
-    if (_currentData.collectedSafeAddresses.indexOf(cardAddress) === -1){
+    if (_currentData.collectedSafeAddresses.indexOf(cardAddress) === -1) {
         console.log('Setup Safe: new multi sig enabled address: ' + cardAddress);
         _currentData.collectedSafeAddresses.push(cardAddress);
     } else {
@@ -259,10 +273,10 @@ async function state_deploy(card) {
     _currentData.state = STATE_DEPLOYED;
     _currentData.currentGnosisSafeAddress = deployedSafe.address;
     _currentData.collectedSafeAddresses = [];
-    _currentData.lastError = '';
-    
-    
-    
+    //_currentData.lastError = '';
+
+
+
     //console.log(JSON.stringify(addressOfLastSafe));  
     //console.log(safe)
 }
@@ -277,20 +291,20 @@ async function state_safeFundingSetup(card) {
         to: _currentData.currentGnosisSafeAddress
     };
 
-    try {
+    //try {
         _currentData.state = STATE_SAFEFUNDING;
         const txReceipt = await card.signAndSendTransaction(web3, tx, 1);
         //todo : check Balance or something ?
 
         _currentData.state = STATE_SAFEFUNDED;
-    } catch (err) {
-        _currentData.lastError = '';
-    }
+    // } catch (err) {
+    //     _currentData.lastError = '';
+    // }
 }
 
 async function state_multisigCollecting(card) {
     const address = await card.getAddress();
-    if (_currentData.multisigCollected[address] == undefined ) {
+    if (_currentData.multisigCollected[address] == undefined) {
 
 
 
@@ -308,7 +322,7 @@ async function state_multisigSetup(card) {
 
 
     //alternative ?? (found in gnosis safe tests)  : 
-    
+
     // let nonce = await gnosisSafe.nonce()
     // let messageData = await gnosisSafe.encodeTransactionData(to, value, data, operation, 0, 0, 0, 0, 0, nonce)
 
