@@ -10,11 +10,7 @@ var pcsc = pcsc();
 
 var _currentData = {};
 
-
-
-const debugState_safeReady = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "safeReady", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
-
-
+//const debugState_safeReady = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "safeReady", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
 
 const debugState_setupSafe = {
     "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3",
@@ -25,6 +21,9 @@ const debugState_setupSafe = {
     "multisigCollected": {},
     "multisigTransactionHash": ""
 }
+
+const debugState_multiSigSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "multiSigSetup", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
+
 
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
@@ -72,7 +71,7 @@ _currentData.multisigTransaction = undefined; // Transaction object that is used
 _currentData.multisigTransactionHash = '';
 
 
-_currentData = debugState_safeReady;
+_currentData = debugState_multiSigSetup;
 
 
 app.get('/', function (req, res) {
@@ -212,6 +211,7 @@ pcsc.on('reader', function (reader) {
                     } else if (_currentData.state === STATE_SAFEFUNDINGSETUP) {
                         await state_safeFundingSetup(card);
                     } else if (_currentData.state === STATE_MULTISIGSETUP) {
+                        console.log('MULTISIG Setup');
                         await state_multisigSetup(card);
                     } else if (_currentData.state === STATE_MULTISIGCOLLECTING) {
                         await state_multisigCollecting(card);
@@ -309,7 +309,7 @@ async function state_safeFundingSetup(card) {
 }
 
 async function state_multisigCollecting(card) {
-    const address = await card.getAddress();
+    const address = await card.getAddress(1);
     if (_currentData.multisigCollected[address] == undefined) {
 
 
@@ -317,53 +317,54 @@ async function state_multisigCollecting(card) {
     } else {
         console.log('There is already a signature existing for this address.');
     }
-
 }
 
 async function state_multisigSetup(card) {
 
-    const address = await card.getAddress();
+    const address = await card.getAddress(1);
+    console.log('Multisig Setup target:' + address);
     _currentData.multisigPayoutAddress = address;
-    _currentData.state = STATE_MULTISIGCOLLECTING;
+    
+    var gnosisSafeTX = deploySafe.getGnosisSafeTransaction(web3, _currentData.currentGnosisSafeAddress, _currentData.multisigPayoutAddress, web3.utils.toWei('0.1'));
+    console.log('GnosisSafeTransaction:' + gnosisSafeTX);
 
-
+    
     //alternative ?? (found in gnosis safe tests)  : 
-
     // let nonce = await gnosisSafe.nonce()
     // let messageData = await gnosisSafe.encodeTransactionData(to, value, data, operation, 0, 0, 0, 0, 0, nonce)
-
     // let signMessageData = owner1Safe.contract.signMessage.getData(messageData)
 
+    // let tx = {
+    //     nonce: nonceHex,
+    //     gasPrice: 1000000000,
+    //     gasLimit: 21000,
+    //     value: web3.utils.toWei('1'),
+    //     to: _currentData.multisigPayoutAddress
+    // };
+
+    // const safeNonce = await safe.methods.nonce().call();
+    // console.log(`safeNonce: ${safeNonce}`)
+
+    // const txObj = {
+    //     to: _currentData.multisigPayoutAddress,
+    //     value: web3.utils.toWei("1"),
+    //     data: "0x",
+    //     operation: 0,
+    //     safeTxGas: 50000,
+    //     baseGas: 300000,
+    //     gasPrice: 0,
+    //     gasToken: "0x0000000000000000000000000000000000000000",
+    //     refundReceiver: "0x0000000000000000000000000000000000000000",
+    //     nonce: safeNonce
+    // };
+
+    // const txHash = await safe.methods.getTransactionHash.apply(null, Object.values(txObj)).call();
+    // console.log(`txHash ${txHash}`);
 
 
-    let tx = {
-        nonce: nonceHex,
-        gasPrice: 1000000000,
-        gasLimit: 21000,
-        value: web3.utils.toWei('1'),
-        to: _currentData.multisigPayoutAddress
-    };
-
-    const safeNonce = await safe.methods.nonce().call();
-    console.log(`safeNonce: ${safeNonce}`)
-    const txObj = {
-        to: _currentData.multisigPayoutAddress,
-        value: web3.utils.toWei("1"),
-        data: "0x",
-        operation: 0,
-        safeTxGas: 50000,
-        baseGas: 300000,
-        gasPrice: 0,
-        gasToken: "0x0000000000000000000000000000000000000000",
-        refundReceiver: "0x0000000000000000000000000000000000000000",
-        nonce: safeNonce
-    };
-    const txHash = await safe.methods.getTransactionHash.apply(null, Object.values(txObj)).call();
-    console.log(`txHash ${txHash}`);
-
-
-    currentData.multisigTransaction = tx;
-    currentData.multisigTransactionHash = txHash;
+    // _currentData.multisigTransaction = tx;
+    // _currentData.multisigTransactionHash = txHash;
+    // _currentData.state = STATE_MULTISIGCOLLECTING;
 }
 
 function printCurrentData() {

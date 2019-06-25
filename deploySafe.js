@@ -70,6 +70,13 @@ async function setupSafe(web3, gnosisSafeAddress, addresses, card) {
 
 }
 
+async function getGnosisSafeTransaction(web3, gnosisSafeAddress, toAddress, amount) {
+    const gnosisSafe = createGnosisSafeObject(web3,gnosisSafeAddress);
+    const safeNonce = await gnosisSafe.methods.nonce().call();
+    console.log('gnosisSafe Nonce:' + safeNonce);
+}
+
+
 async function sendTx(web3, toAddress,  encodedAbi, card) {
 
     // Prepare the raw transaction information
@@ -158,3 +165,4 @@ exports.web3 = web3;
 exports.safe = safe;
 exports.deployNewSafe = deployNewSafe;
 exports.setupSafe = setupSafe;
+exports.getGnosisSafeTransaction = getGnosisSafeTransaction;
