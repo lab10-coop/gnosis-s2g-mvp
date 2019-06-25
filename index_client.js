@@ -50,7 +50,7 @@ function updateUI() {
         mainHeadline.innerText = 'Lay a card to sign the setup of the gnosis safe';
     } else if (currentData.state === 'settingUpSafe') {
         mainHeadline.innerText = 'The Gnosis Safe is about to get setup on the blockchain';
-    } else if (currentData.state === 'safeready') {
+    } else if (currentData.state === 'safeReady') {
         mainHeadline.innerText = 'The Gnosis Safe is setup and ready, remove card to proced';
     } else if (currentData.state === 'safeFundingSetup') {
         mainHeadline.innerText = 'Choose amount to transfer into the safe, confirm with funded card.';
@@ -85,7 +85,15 @@ function updateUI() {
     setStateMachineStyle('collectingMultiSigAddresses');
     setStateMachineStyle('setupSafe');
     setStateMachineStyle('settingUpSafe');
-    setStateMachineStyle('safeready');
+    setStateMachineStyle('safeReady');
+
+    setStateMachineStyle('safeFundingSetup');
+    setStateMachineStyle('safeFunding');
+    setStateMachineStyle('safeFunded');
+    setStateMachineStyle('multiSigSetup');
+    setStateMachineStyle('multiSigCollecting');
+    setStateMachineStyle('multiSigSending');
+    setStateMachineStyle('multisigSuccess');
 
     //setupThisGnosisSafe.
 }

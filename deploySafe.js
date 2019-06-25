@@ -85,7 +85,7 @@ async function sendTx(web3, toAddress,  encodedAbi, card) {
     let tx = new Tx(rawTx);
 
     const cardKeyIndex = 1;
-    const signature = await card.generateSignature(web3, tx, cardKeyIndex);
+    const signature = await card.signTransaction(web3, tx, cardKeyIndex);
 
     // Submit the smart contract deployment transaction
     txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
@@ -134,7 +134,7 @@ async function deployContract(web3, contractName, card) {
     };
 
     let tx = new Tx(rawTx);
-    const signature = await card.generateSignature(web3, tx, cardKeyIndex);
+    const signature = await card.signTransaction(web3, tx, cardKeyIndex);
 
 
     //logDebug(signature.toString('hex'));
