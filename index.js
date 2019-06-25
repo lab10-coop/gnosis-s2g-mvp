@@ -117,7 +117,7 @@ app.listen(3000);
 
 const web3_options = {
     transactionConfirmationBlocks: 1,
-    defaultGasPrice: 1000000000,
+    defaultGasPrice: '1000000000',
     //transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
 }
 
@@ -148,8 +148,8 @@ async function setupSafe(card) {
 
 function newCard(reader) {
     let card = new Security2GoCard.Security2GoCard(reader);
-    card.log_debug_signing = true;
-    card.log_debug_web3 = true;
+    card.log_debug_signing = false;
+    card.log_debug_web3 = false;
 
     return card;
 }
@@ -285,11 +285,17 @@ async function state_safeFundingSetup(card) {
 
     // Prepare the raw transaction information
     let tx = {
-        gasPrice: 1000000000,
-        gasLimit: 21000,
-        value: web3.utils.toWei('1'),
+        gasPrice: web3.utils.numberToHex('1000000000'),
+        gasLimit: web3.utils.numberToHex('100000'),
+        //value: web3.utils.toWei('1'),
+        value: '2',
         to: _currentData.currentGnosisSafeAddress
     };
+
+    console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
+            
+
+    //console.log('to-transfer: ' + tx.value);
 
     //try {
         _currentData.state = STATE_SAFEFUNDING;
