@@ -25,6 +25,9 @@ const debugState_setupSafe = {
 const debugState_multiSigSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "multiSigSetup", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
 
 
+const debugState_saveFundingSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "safeFundingSetup", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
+
+
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
 
@@ -71,8 +74,9 @@ _currentData.multisigTransaction = undefined; // Transaction object that is used
 _currentData.multisigTransactionHash = '';
 
 
-_currentData = debugState_multiSigSetup;
-
+//_currentData = debugState_multiSigSetup;
+//_currentData = debugState_setupSafe;
+_currentData = debugState_saveFundingSetup;
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
@@ -288,7 +292,7 @@ async function state_safeFundingSetup(card) {
         gasPrice: web3.utils.numberToHex('1000000000'),
         gasLimit: web3.utils.numberToHex('100000'),
         //value: web3.utils.toWei('1'),
-        value: '2',
+        value: web3.utils.toHex(web3.utils.toWei('1')),
         to: _currentData.currentGnosisSafeAddress
     };
 
@@ -324,9 +328,27 @@ async function state_multisigSetup(card) {
     const address = await card.getAddress(1);
     console.log('Multisig Setup target:' + address);
     _currentData.multisigPayoutAddress = address;
+
+    const gnosisSafeTX = {
+        to: toAddress,
+        value: web3.utils.toWei('0.1'),
+        data: "0x",
+        operation: 0,
+        safeTxGas: 50000,
+        baseGas: 300000,
+        gasPrice: 0,
+        gasToken: "0x0000000000000000000000000000000000000000",
+        refundReceiver: "0x0000000000000000000000000000000000000000",
+        nonce: safeNonce
+    };
+
     
-    var gnosisSafeTX = deploySafe.getGnosisSafeTransaction(web3, _currentData.currentGnosisSafeAddress, _currentData.multisigPayoutAddress, web3.utils.toWei('0.1'));
-    console.log('GnosisSafeTransaction:' + gnosisSafeTX);
+    var txHash = await deploySafe.getGnosisSafeTransactionHash(web3,gnosisSafeTX);
+
+    _currentData.multisigTransactionHash = txHash;
+    _currentData.multisigTransaction = gnosisSafeTX;
+
+
 
     
     //alternative ?? (found in gnosis safe tests)  : 
