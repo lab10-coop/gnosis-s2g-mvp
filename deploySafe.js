@@ -66,32 +66,46 @@ async function setupSafe(web3, gnosisSafeAddress, addresses, card) {
     return sendResult;
 
     //const setupPE =setupFunction.send({} , function(txHash) { logDebug('setupSafe TX: ' + txHash) });
+}
 
+async function createGnosisSafeTransaction(web3, gnosisSafeAddress, toAddress, value) {
+
+    const gnosisSafe = createGnosisSafeObject(web3,gnosisSafeAddress);
+    const safeNonce = await gnosisSafe.methods.nonce().call();
+    console.log('gnosisSafe Nonce:' + safeNonce.toString('hex'));
+
+    const gnosisSafeTX = {
+        to: toAddress,
+        value: value,
+        data: "0x",
+        operation: 0,
+        safeTxGas: 50000,
+        baseGas: 300000,
+        gasPrice: '0x0',
+        gasToken: "0x0000000000000000000000000000000000000000",
+        refundReceiver: "0x0000000000000000000000000000000000000000",
+        nonce: web3.utils.toHex( safeNonce )
+    };
+
+    // const txHash = await safe.methods.getTransactionHash.apply(null, Object.values(txObj)).call();
+    // console.log(`txHash ${txHash}`);
+
+    return gnosisSafeTX;
 
 }
 
-async function getGnosisSafeTransaction(web3, gnosisSafeAddress, toAddress, value) {
+async function getGnosisSafeTransactionHash(web3,gnosisSafeAddress, gnosisSafeTransaction) {
+
     const gnosisSafe = createGnosisSafeObject(web3,gnosisSafeAddress);
-    const safeNonce = await gnosisSafe.methods.nonce().call();
-    console.log('gnosisSafe Nonce:' + safeNonce);
+    // console.log(gnosisSafeTransaction);
+    // console.log(gnosisSafeAddress);
+    
+    const result = await gnosisSafe.methods.getTransactionHash(gnosisSafeTransaction.to, gnosisSafeTransaction.value, gnosisSafeTransaction.data, gnosisSafeTransaction.operation, gnosisSafeTransaction.safeTxGas, gnosisSafeTransaction.baseGas, gnosisSafeTransaction.gasPrice, gnosisSafeTransaction.gasToken, gnosisSafeTransaction.refundReceiver, gnosisSafeTransaction.nonce).call(); 
 
-    const data = '0x';
-    const operation = 0; 
-    const gasToken = '0x0000000000000000000000000000000000000000';
-    const refundReceiver = '0x0000000000000000000000000000000000000000';
-
-    console.log(`toAddress ${toAddress}`);
-
-    //const encodedTransactionData =  await gnosisSafe.methods.encodeTransactionData(toAddress, value, data, operation, 0, 0, 0, gasToken, refundReceiver, safeNonce).call();
-    //console.log(encodedTransactionData);
-
-
-
-
-    const txHash = await safe.methods.getTransactionHash.apply(null, Object.values(txObj)).call();
-    console.log(`txHash ${txHash}`);
-
-
+    // console.log('txHash: ' + result);
+    // console.log(result);
+    
+    return result;
 }
 
 async function sendTx(web3, toAddress,  encodedAbi, card) {
@@ -182,4 +196,5 @@ exports.web3 = web3;
 exports.safe = safe;
 exports.deployNewSafe = deployNewSafe;
 exports.setupSafe = setupSafe;
-exports.getGnosisSafeTransaction = getGnosisSafeTransaction;
+exports.getGnosisSafeTransactionHash = getGnosisSafeTransactionHash;
+exports.createGnosisSafeTransaction = createGnosisSafeTransaction;
