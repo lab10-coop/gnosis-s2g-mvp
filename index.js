@@ -152,8 +152,8 @@ async function setupSafe(card) {
 
 function newCard(reader) {
     let card = new Security2GoCard.Security2GoCard(reader);
-    card.log_debug_signing = true;
-    card.log_debug_web3 = true;
+    card.log_debug_signing = false;
+    card.log_debug_web3 = false;
 
     return card;
 }
@@ -321,15 +321,20 @@ async function state_multisigCollecting(card) {
 
         const signedTx = await card.getSignedTransactionObject(web3, _currentData.multisigTransaction, 1);
         console.log('got signed Transaction');
-        console.log(signedTx);
+        //console.log(signedTx);
         _currentData.multisigCollected[address] = signedTx;
 
-        if (_currentData.multisigCollected.length == _currentData.collectedSafeAddresses) {
+        const numOfCollectedMultisigTxs = Object.keys(_currentData.multisigCollected).length;
+        console.log(`numOfCollectedMultisigTxs : ${numOfCollectedMultisigTxs}`);
+
+        if ( numOfCollectedMultisigTxs  == _currentData.collectedSafeAddresses.length) {
             // we now have all signatures, move forward.
-            console.state = STATE_MULTISIGSENDING;
+            _currentData.state = STATE_MULTISIGSENDING;
             
-            //todo: continue here.
-            //await deploySafe.sendMultisigTransaction();
+            const safeTransferTransaction = await deploySafe.sendMultisigTransaction(web3, card, _currentData.currentGnosisSafeAddress, _currentData.multisigTransaction, _currentData.multisigTransactionHash, _currentData.multisigCollected);
+        
+        } else{
+            console.log('waiting for further transactions.' + numOfCollectedMultisigTxs + ' / ' + _currentData.collectedSafeAddresses.length);
         }
 
     } else {
