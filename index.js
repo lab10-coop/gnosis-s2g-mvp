@@ -152,8 +152,8 @@ async function setupSafe(card) {
 
 function newCard(reader) {
     let card = new Security2GoCard.Security2GoCard(reader);
-    card.log_debug_signing = false;
-    card.log_debug_web3 = false;
+    card.log_debug_signing = true;
+    card.log_debug_web3 = true;
 
     return card;
 }
@@ -317,7 +317,20 @@ async function state_multisigCollecting(card) {
     const address = await card.getAddress(1);
     if (_currentData.multisigCollected[address] == undefined) {
 
-        card.get
+        console.log(`collecting multisig form ${address}`);
+
+        const signedTx = await card.getSignedTransactionObject(web3, _currentData.multisigTransaction, 1);
+        console.log('got signed Transaction');
+        console.log(signedTx);
+        _currentData.multisigCollected[address] = signedTx;
+
+        if (_currentData.multisigCollected.length == _currentData.collectedSafeAddresses) {
+            // we now have all signatures, move forward.
+            console.state = STATE_MULTISIGSENDING;
+            
+            //todo: continue here.
+            //await deploySafe.sendMultisigTransaction();
+        }
 
     } else {
         //overwrite existing ??
