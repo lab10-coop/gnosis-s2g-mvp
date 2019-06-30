@@ -33,6 +33,14 @@ async function deployNewSafe(web3, card) {
     return await deployContract(web3, 'GnosisSafe', card);
 }
 
+function toHexString(byteArray) {
+    var s = '';
+    byteArray.forEach(function(byte) {
+      s += ('0' + (byte & 0xFF).toString(16)).slice(-2);
+    });
+    return s;
+}
+
 function createGnosisSafeObject(web3, gnosisSafeAddress) {
     const contractName = 'GnosisSafe'
     const jsonOutputName = path.parse(contractName).name + '.json';
@@ -114,67 +122,77 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
 
     console.log('sending multisig transaction.');
     const safe = createGnosisSafeObject(web3, gnosisSafeAddress);
-    console.log('gnosis safe created');
+    //console.log('gnosis safe created');
     const signers = Object.keys( multisigCollected ); // doesn't have to be the same addr. It's just easier to manage if so.
     //const sortedSigners = signers.sort();
     //console.log(`signers (sorted): ${sortedSigners}`);
-
     console.log(`Signers: ${JSON.stringify(signers)}`);
-
     let sigString = "0x";
 
-
-    Object.entries(multisigCollected).forEach( ([address, sig]) => {
+    Object.entries(multisigCollected).forEach(([address, sig]) => {
+        if (sig == undefined) {
+            return;
+        }
         console.log( `appending signature from ${address}`);
+        //console.log(`type: ${typeof sig.r}`);
+
+        //console.log(sig.r);
         
-        console.log(`r: ${sig.r.toString("hex")}, s: ${sig.s.toString("hex")}, v: ${sig.v.toString(16)}`);
-        sigString += sig.r.toString("hex") + sig.s.toString("hex") + sig.v.toString(16);
+        //console.log(`r: ${sig.r.toString("hex")}, s: ${sig.s.toString("hex")}, v: ${sig.v.toString(16)}`);
+
+        //
+        var signaturePart = toHexString(sig.r) + toHexString(sig.s) + toHexString(sig.v) /* v should be length of 1 byte ??*/;
+        console.log('appending: ' + signaturePart); 
+        sigString += signaturePart;
+
+
         console.log(`sigString: ${sigString}`);
      });
-// for every signer
-    // the last param is for chainId. Set to 0 in order to get the raw recovery value, as expected by the Safe contract
-    
-    console.log(`r: ${sig.r.toString("hex")}, s: ${sig.s.toString("hex")}, v: ${sig.v.toString(16)}`);
-    sigString += sig.r.toString("hex") + sig.s.toString("hex") + sig.v.toString(16);
-    console.log(`sigString: ${sigString}`);
-// sigString: '0xc49ef50c604c98168779a5b9a1a30f760eb30b117e19a82f961107fb3976934d1370611a7d75dfd757e42739db75de41a01d88d31ddc98c5d10c803c2a9e301478825'
 
     const execTxArgs = Object.values(multisigTransaction);
-
     
+    console.log(`before execTxArgs: ${execTxArgs}`);
     // execTransaction doesn't need the last item (nonce), but instead needs the signatures
     execTxArgs.splice(9, 1, sigString);execTxArgs
-    console.log(`execTxArgs: ${execTxArgs}`);
+    console.log(`after execTxArgs: ${execTxArgs}`);
 
 
 
 // await safe.methods.execTransaction.apply(null, execTxArgs).send( { from: config.safe.executor.address } )
 
     const execTxData = safe.methods.execTransaction.apply(null, execTxArgs).encodeABI();
+
+    
     let outerTxObj = {
-        from: config.safe.executor.address,
+        //from: config.safe.executor.address,
         to: gnosisSafeAddress,
         data: execTxData,
-        gas: 300000,
-        gasPrice: 1000000000,
-        chainId: 1 // if not set, it will fail for ganache due to eth_chainId not being supported
+        gas: web3.utils.toHex('300000'),
+        gasPrice: web3.utils.toHex('100000000000'),
+        //chainId: 1 // if not set, it will fail for ganache due to eth_chainId not being supported
     };
-    console.log(`outerTxObj: ${JSON.stringify(outerTxObj, null, 2)}`);
 
-    const execCallRet = await web3.eth.call(outerTxObj);
-    console.log(`execCallRet: ${execCallRet}`);
 
-    const signedExecTxObj = await web3.eth.accounts.signTransaction(outerTxObj, `0x${config.safe.executor.privateKey}`);
-    console.log(`signedExecTxObj: ${JSON.stringify(signedExecTxObj, null, 2)}`);
+
+    // console.log(`outerTxObj: ${JSON.stringify(outerTxObj, null, 2)}`);
+    // const execCallRet = await web3.eth.call(outerTxObj);
+    // console.log(`execCallRet: ${execCallRet}`);
+
+    //sendTransaction()
+
+    // const signedExecTxObj = await web3.eth.accounts.signTransaction(outerTxObj, `0x${config.safe.executor.privateKey}`);
+    // console.log(`signedExecTxObj: ${JSON.stringify(signedExecTxObj, null, 2)}`);
 
     // check
-    let execTxSigner = web3.eth.accounts.recoverTransaction(signedExecTxObj.rawTransaction);
-    console.log(`execTxSigner: ${execTxSigner}`);
+    // let execTxSigner = web3.eth.accounts.recoverTransaction(signedExecTxObj.rawTransaction);
+    // console.log(`execTxSigner: ${execTxSigner}`);
 
-    const sentTx = await web3.eth.sendSignedTransaction(signedExecTxObj.rawTransaction);
+    // const sentTx = await web3.eth.sendSignedTransaction(signedExecTxObj.rawTransaction);
 
 
-
+    
+    card.signAndSendTransaction(web3, outerTxObj, 1);
+   
 
 }
 
@@ -183,6 +201,7 @@ async function sendTx(web3, toAddress,  encodedAbi, card) {
     // Prepare the raw transaction information
     let rawTx = {
         //nonce: nonceHex,
+
         gasPrice: 1000000000,
         gasLimit: 6721975, // <- Ganache hardcoded gas limit
         data: encodedAbi,
