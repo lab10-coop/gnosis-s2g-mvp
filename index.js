@@ -29,6 +29,11 @@ const debugState_saveFundingSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7
 
 const debugState_multiSigCollecting = {"currentGnosisSafeAddress":"0xf81d752a2E7617C70267aaD8d3Ff927312a369E3","state":"multiSigCollecting","collectedSafeAddresses":["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3","0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"0x0774fe042bc23d01599b5a92b97b3125a4cb20ee","multisigCollected":{},"multisigTransactionHash":"0x5b6b6cf67e762a011fb98500907e81b035f17dfd7c9c7abbc7969c7574c0e19a","multisigTransaction":{"to":"0x0774fe042bc23d01599b5a92b97b3125a4cb20ee","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"}}
 
+
+const debugState_single_funding = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"safeFundingSetup","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
+
+const debugState_single_MultisigCollecting = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"multiSigCollecting","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"0x756269ce7e0285670ecbd234f230645efba049d3","multisigCollected":{},"multisigTransactionHash":"0x0598274d7f9385310ecbe12c260db32c467d024211c3b4d47b4798fd1458bad2","multisigTransaction":{"to":"0x756269ce7e0285670ecbd234f230645efba049d3","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"}}
+
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
 
@@ -62,6 +67,7 @@ const STATE_MULTISIGSENDING = 'multiSigSending'
 const STATE_MULTISIGSUCCESS = 'multisigSuccess'
 
 
+
 //const state_collectingMultisigAddresses
 
 //_currentData.currentGnosisSafeAddress = '0xC59791222C5513995AAE19283af5Fc3b3B4595Ce'
@@ -77,7 +83,9 @@ _currentData.multisigTransactionHash = '';
 
 //_currentData = debugState_multiSigSetup;
 //_currentData = debugState_setupSafe;
-_currentData = debugState_multiSigCollecting;
+//_currentData = debugState_multiSigCollecting;
+_currentData = debugState_single_MultisigCollecting;
+
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
@@ -121,7 +129,7 @@ app.listen(3000);
 
 const web3_options = {
     transactionConfirmationBlocks: 1,
-    defaultGasPrice: '1000000000',
+    defaultGasPrice: '100000000000',
     //transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
 }
 
@@ -290,7 +298,7 @@ async function state_safeFundingSetup(card) {
 
     // Prepare the raw transaction information
     let tx = {
-        gasPrice: web3.utils.numberToHex('1000000000'),
+        gasPrice: web3.utils.numberToHex('100000000000'),
         gasLimit: web3.utils.numberToHex('100000'),
         //value: web3.utils.toWei('1'),
         value: web3.utils.toHex(web3.utils.toWei('1')),
@@ -316,6 +324,10 @@ async function state_safeFundingSetup(card) {
 async function state_multisigCollecting(card) {
     const address = await card.getAddress(1);
     if (_currentData.multisigCollected[address] == undefined) {
+
+        if (_currentData.collectedSafeAddresses.indexOf(address) == -1) {
+            throw `Card ${address} is not allowed to unlock this safe`;
+        }
 
         console.log(`collecting multisig form ${address}`);
 
@@ -374,4 +386,10 @@ function printState() {
 printCurrentData();
 printState();
 console.log("System Ready, waiting for reader. if no reader shows up - sudo systemctl restart pcscd - and restart this project might help !");
-//header( 'refresh: 5; url=http://www.example.net' );
+
+
+// web3.eth.getTransactionReceipt('0x521665fd4f1c1bad79ef9e4767d4d0584c1a5fee90cd3e0563f8ae7e9fe2bee1', (error, receipt) => {
+
+//     console.log('Got receipt:');
+//     console.log(receipt);
+// });

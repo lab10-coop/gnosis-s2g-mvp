@@ -188,6 +188,10 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
 
 
 
+
+    const execCallRet = await web3.eth.call(outerTxObj);
+    console.log(`execCallRet: ${execCallRet}`);
+
     // console.log(`outerTxObj: ${JSON.stringify(outerTxObj, null, 2)}`);
     // const execCallRet = await web3.eth.call(outerTxObj);
     // console.log(`execCallRet: ${execCallRet}`);
@@ -204,8 +208,10 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
     // const sentTx = await web3.eth.sendSignedTransaction(signedExecTxObj.rawTransaction);
 
 
+    return await sendTx(web3, gnosisSafeAddress, execTxData, card);
+
     
-    card.signAndSendTransaction(web3, outerTxObj, 1);
+    //card.signAndSendTransaction(web3, outerTxObj, 1);
    
 
 }
@@ -215,8 +221,8 @@ async function sendTx(web3, toAddress,  encodedAbi, card) {
     // Prepare the raw transaction information
     let rawTx = {
         //nonce: nonceHex,
-
-        gasPrice: 1000000000,
+                  
+        gasPrice: web3.utils.toHex('100000000000'),
         gasLimit: 6721975, // <- Ganache hardcoded gas limit
         data: encodedAbi,
         //from: privateKey_address,
@@ -268,7 +274,7 @@ async function deployContract(web3, contractName, card) {
     // Prepare the raw transaction information
     let rawTx = {
         nonce: nonceHex,
-        gasPrice: 1000000000,
+        gasPrice:  web3.utils.toHex('100000000000'),
         gasLimit: 6721975, // <- Ganache hardcoded gas limit
         data: encodedData,
         from: address
