@@ -143,6 +143,11 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
         //
         var signaturePart = toHexString(sig.r) + toHexString(sig.s) + toHexString(sig.v) /* v should be length of 1 byte ??*/;
         console.log('appending: ' + signaturePart); 
+
+        if (signaturePart.length != 130) {
+            throw `Expected string length of signature to be 130, leading zero problem ?`
+        }
+
         sigString += signaturePart;
 
 
@@ -153,24 +158,33 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
     
     console.log(`before execTxArgs: ${execTxArgs}`);
     // execTransaction doesn't need the last item (nonce), but instead needs the signatures
-    execTxArgs.splice(9, 1, sigString);execTxArgs
+    execTxArgs.splice(9, 1, sigString);
     console.log(`after execTxArgs: ${execTxArgs}`);
 
 
 
 // await safe.methods.execTransaction.apply(null, execTxArgs).send( { from: config.safe.executor.address } )
 
-    const execTxData = safe.methods.execTransaction.apply(null, execTxArgs).encodeABI();
+    const execTxDataOld = safe.methods.execTransaction.apply(null, execTxArgs).encodeABI();
 
-    
+    const execTxData = safe.methods.execTransaction( multisigTransaction.to, multisigTransaction.value, multisigTransaction.data,  multisigTransaction.operation, multisigTransaction.safeTxGas, multisigTransaction.baseGas, multisigTransaction.gasPrice, multisigTransaction.gasToken, multisigTransaction.refundReceiver, sigString ).encodeABI()
+
+    if (execTxDataOld != execTxData) {
+        console.error('Difference detected: ' );
+        console.error(execTxData);
+        console.error(execTxDataOld);
+    }
+
     let outerTxObj = {
         //from: config.safe.executor.address,
         to: gnosisSafeAddress,
         data: execTxData,
-        gas: web3.utils.toHex('300000'),
+        gas: web3.utils.toHex('1000000'),
         gasPrice: web3.utils.toHex('100000000000'),
         //chainId: 1 // if not set, it will fail for ganache due to eth_chainId not being supported
     };
+
+    console.log('Exec Data:' + execTxData);
 
 
 

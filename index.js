@@ -373,5 +373,5 @@ function printState() {
 
 printCurrentData();
 printState();
-console.log("System Ready, waiting for reader. if no reader shows up - sudo systemctl restart pcscd - might help !");
+console.log("System Ready, waiting for reader. if no reader shows up - sudo systemctl restart pcscd - and restart this project might help !");
 //header( 'refresh: 5; url=http://www.example.net' );
