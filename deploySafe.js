@@ -41,6 +41,28 @@ function toHexString(byteArray) {
     return s;
 }
 
+function trim0x(hexString) {
+    if (hexString.startsWith('0x')) {
+        hexString = hexString.substring(2, hexString.length);
+    }
+    return hexString;
+}
+
+function fixLengthTo32Bytes(hexString) {
+    while (hexString.length > 64){
+        if (hexString.startsWith('00')) {
+            hexString = hexString.substring(2, hexString.length);
+        } else {
+            throw `unable to fix hexstring to length 32: ${hexString}`;
+        }
+    }
+
+    while (hexString.length < 64) {
+        hexString = hexString + '00';
+    }
+    return hexString;
+}
+
 function createGnosisSafeObject(web3, gnosisSafeAddress) {
     const contractName = 'GnosisSafe'
     const jsonOutputName = path.parse(contractName).name + '.json';
@@ -135,22 +157,17 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
         }
         console.log( `appending signature from ${address}`);
         //console.log(`type: ${typeof sig.r}`);
-
         //console.log(sig.r);
-        
         //console.log(`r: ${sig.r.toString("hex")}, s: ${sig.s.toString("hex")}, v: ${sig.v.toString(16)}`);
 
         //
-        var signaturePart = toHexString(sig.r) + toHexString(sig.s) + toHexString(sig.v) /* v should be length of 1 byte ??*/;
+        var signaturePart = fixLengthTo32Bytes(trim0x(sig.r)) + fixLengthTo32Bytes(trim0x(sig.s)) + "1b" /* v should be length of 1 byte ??*/;
         console.log('appending: ' + signaturePart); 
 
         if (signaturePart.length != 130) {
             throw `Expected string length of signature to be 130, leading zero problem ?`
         }
-
         sigString += signaturePart;
-
-
         console.log(`sigString: ${sigString}`);
      });
 
@@ -161,12 +178,9 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
     execTxArgs.splice(9, 1, sigString);
     console.log(`after execTxArgs: ${execTxArgs}`);
 
-
-
 // await safe.methods.execTransaction.apply(null, execTxArgs).send( { from: config.safe.executor.address } )
 
     const execTxDataOld = safe.methods.execTransaction.apply(null, execTxArgs).encodeABI();
-
     const execTxData = safe.methods.execTransaction( multisigTransaction.to, multisigTransaction.value, multisigTransaction.data,  multisigTransaction.operation, multisigTransaction.safeTxGas, multisigTransaction.baseGas, multisigTransaction.gasPrice, multisigTransaction.gasToken, multisigTransaction.refundReceiver, sigString ).encodeABI()
 
     if (execTxDataOld != execTxData) {
@@ -185,10 +199,6 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
     };
 
     console.log('Exec Data:' + execTxData);
-
-
-
-
     const execCallRet = await web3.eth.call(outerTxObj);
     console.log(`execCallRet: ${execCallRet}`);
 
@@ -297,7 +307,6 @@ async function deployContract(web3, contractName, card) {
 
     return contract;
 }
-
 
 exports.Web3 = Web3;
 //exports.config = config;

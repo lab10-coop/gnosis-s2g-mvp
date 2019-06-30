@@ -156,12 +156,10 @@ async function setupSafe(card) {
 
 }
 
-
-
 function newCard(reader) {
     let card = new Security2GoCard.Security2GoCard(reader);
-    card.log_debug_signing = false;
-    card.log_debug_web3 = false;
+    card.log_debug_signing = true;
+    card.log_debug_web3 = true;
 
     return card;
 }
@@ -331,7 +329,8 @@ async function state_multisigCollecting(card) {
 
         console.log(`collecting multisig form ${address}`);
 
-        const signedTx = await card.getSignedTransactionObject(web3, _currentData.multisigTransaction, 1);
+        //const signedTx = await card.getSignedTransactionObject(web3, _currentData.multisigTransaction, 1);
+        const signedTx = await card.getRSSignatureFromHash(_currentData.multisigTransactionHash, 1);
         console.log('got signed Transaction');
         //console.log(signedTx);
         _currentData.multisigCollected[address] = signedTx;
@@ -386,6 +385,8 @@ function printState() {
 printCurrentData();
 printState();
 console.log("System Ready, waiting for reader. if no reader shows up - sudo systemctl restart pcscd - and restart this project might help !");
+
+
 
 
 // web3.eth.getTransactionReceipt('0x521665fd4f1c1bad79ef9e4767d4d0584c1a5fee90cd3e0563f8ae7e9fe2bee1', (error, receipt) => {
