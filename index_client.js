@@ -64,7 +64,7 @@ function updateUI() {
     } else if (currentData.state === 'multiSigSetupFinished') {
         mainHeadline.innerText = `Paying out 0.1 ATS to ${currentData.multisigPayoutAddress}. please remove card`;
     } else if (currentData.state === 'multiSigCollecting') {
-        mainHeadline.innerText = 'Not all cards have signed yet. lay other cards';
+        mainHeadline.innerText = `Collected ${Object.keys(currentData.multisigCollected).length} / ${currentData.collectedSafeAddresses.length} signatures. Lay missing cards to sign`;
     } else if (currentData.state === 'multiSigSending') {
         mainHeadline.innerText = 'Multisig transfer is processed by the blockchain, please standby';
     } else if (currentData.state === 'multiSigSuccess') {

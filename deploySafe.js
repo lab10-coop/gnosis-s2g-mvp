@@ -164,6 +164,7 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
         var signaturePart = fixLengthTo32Bytes(trim0x(sig.r)) + fixLengthTo32Bytes(trim0x(sig.s)) + trim0x(sig.v);
         console.log('appending: ' + signaturePart); 
 
+        //r: 64 + s: 64 + v: 2 = 130 chars per signature.
         if (signaturePart.length != 130) {
             throw `Expected string length of signature to be 130, leading zero problem ?`
         }

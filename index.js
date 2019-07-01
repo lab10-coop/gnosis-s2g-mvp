@@ -27,8 +27,6 @@ const debugState_multiSigSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7617
 
 const debugState_saveFundingSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "safeFundingSetup", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
 
-const debugState_multiSigCollecting = {"currentGnosisSafeAddress":"0xf81d752a2E7617C70267aaD8d3Ff927312a369E3","state":"multiSigCollecting","collectedSafeAddresses":["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3","0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"0x0774fe042bc23d01599b5a92b97b3125a4cb20ee","multisigCollected":{},"multisigTransactionHash":"0x5b6b6cf67e762a011fb98500907e81b035f17dfd7c9c7abbc7969c7574c0e19a","multisigTransaction":{"to":"0x0774fe042bc23d01599b5a92b97b3125a4cb20ee","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"}}
-
 
 const debugState_single_funding = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"safeFundingSetup","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
 
@@ -38,10 +36,11 @@ const debugState_multisigSetupFinished = {"currentGnosisSafeAddress":"0x0d7283ca
 
 const debugState_multiSigCollecting_New = {"currentGnosisSafeAddress":"0xf832ac85da49eD332B07ced539D06B0e6C3A50b3","state":"multiSigCollecting","collectedSafeAddresses":["0xb222330ca92307d639b0bed948fe4f3577fc500b"],"lastError":"","multisigPayoutAddress":"0x756269ce7e0285670ecbd234f230645efba049d3","multisigCollected":{"0xb222330ca92307d639b0bed948fe4f3577fc500b":{"r":"0x00ff11a3944175d503b96280d1005db99cd940424481ed5e8495c9556bdfe5a20f","s":"0x07cab04b375dd0a492f6f2b72d4abd4147aa1cadcbf5336461166541c83cce25","v":"0x1b"}},"multisigTransaction":{"to":"0x756269ce7e0285670ecbd234f230645efba049d3","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"},"multisigTransactionHash":"0xd25874707ad18958028a8d7eb80336e14d36d05b4516f0aa6de1a742dddc4e11"}
 
+const debugState_high5_multiSigSetup = {"currentGnosisSafeAddress":"0x79c9e5C29e22fB665Dee3F0e726ccEBA3eF07ead","state":"multiSigSetup","collectedSafeAddresses":["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3","0x1b629f37aed1576c2e979aff68d2983f0ab13479","0x0774fe042bc23d01599b5a92b97b3125a4cb20ee","0xb222330ca92307d639b0bed948fe4f3577fc500b","0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
+
+
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
-
-
 //                                                                                                     ^                                  ^                                    -
 //                                                                                                     -------------------------------------------------------------------------
 // (R) => Remove card to progress to next state
@@ -92,7 +91,10 @@ _currentData.multisigTransactionHash = '';
 //_currentData = debugState_multiSigCollecting;
 //_currentData = debugState_single_multiSigSetup;
 //_currentData = debugState_multisigSetupFinished;
-_currentData = debugState_multiSigCollecting_New;
+//_currentData = debugState_multiSigCollecting_New;
+
+_currentData = debugState_high5_multiSigSetup;
+
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
@@ -241,7 +243,13 @@ pcsc.on('reader', function (reader) {
                         console.log('MULTISIG Setup');
                         await state_multisigSetup(card);
                     } else if (_currentData.state === STATE_MULTISIGCOLLECTING) {
-                        await state_multisigCollecting(card);
+                        try {
+                            await state_multisigCollecting(card);
+                        } catch (error) {
+                            _currentData.multisigCollected = {};
+                            _currentData.lastError = 'error:' + error;
+                            _currentData.state = STATE_MULTISIGCOLLECTING;
+                        }
                     }
                     else {
                         console.error('state not implemented yet: ' + _currentData.state);
@@ -254,9 +262,7 @@ pcsc.on('reader', function (reader) {
                     //_currentData.state = 'error';
                     console.error(_currentData.lastError);
                 }
-
                 //doSomeTests(reader);
-
             }
         }
     });
