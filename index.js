@@ -34,6 +34,10 @@ const debugState_single_funding = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0D
 
 const debugState_single_multiSigSetup = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"multiSigSetup","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
 
+const debugState_multisigSetupFinished = {"currentGnosisSafeAddress":"0x0d7283ca1ca73239a7d11a02Dd8d4a1BC3B3750c","state":"multiSigSetupFinished","collectedSafeAddresses":["0xb222330ca92307d639b0bed948fe4f3577fc500b","0x1b629f37aed1576c2e979aff68d2983f0ab13479"],"lastError":"","multisigPayoutAddress":"0x756269ce7e0285670ecbd234f230645efba049d3","multisigCollected":{},"multisigTransaction":{"to":"0x756269ce7e0285670ecbd234f230645efba049d3","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"},"multisigTransactionHash":"0xc27b1129cb032f7076350aa49cb2f74781952b95cf155aa9f651b3f7562fdc81"}
+
+const debugState_multiSigCollecting_New = {"currentGnosisSafeAddress":"0xf832ac85da49eD332B07ced539D06B0e6C3A50b3","state":"multiSigCollecting","collectedSafeAddresses":["0xb222330ca92307d639b0bed948fe4f3577fc500b"],"lastError":"","multisigPayoutAddress":"0x756269ce7e0285670ecbd234f230645efba049d3","multisigCollected":{"0xb222330ca92307d639b0bed948fe4f3577fc500b":{"r":"0x00ff11a3944175d503b96280d1005db99cd940424481ed5e8495c9556bdfe5a20f","s":"0x07cab04b375dd0a492f6f2b72d4abd4147aa1cadcbf5336461166541c83cce25","v":"0x1b"}},"multisigTransaction":{"to":"0x756269ce7e0285670ecbd234f230645efba049d3","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"},"multisigTransactionHash":"0xd25874707ad18958028a8d7eb80336e14d36d05b4516f0aa6de1a742dddc4e11"}
+
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
 
@@ -62,9 +66,11 @@ const STATE_SAFEFUNDINGSETUP = 'safeFundingSetup'
 const STATE_SAFEFUNDING = "safeFunding"
 const STATE_SAFEFUNDED = "safeFunded"
 const STATE_MULTISIGSETUP = 'multiSigSetup'
+const STATE_MULTISIGSETUPFINISHED = 'multiSigSetupFinished'
 const STATE_MULTISIGCOLLECTING = 'multiSigCollecting'
 const STATE_MULTISIGSENDING = 'multiSigSending'
 const STATE_MULTISIGSUCCESS = 'multisigSuccess'
+
 
 
 
@@ -84,8 +90,9 @@ _currentData.multisigTransactionHash = '';
 //_currentData = debugState_multiSigSetup;
 //_currentData = debugState_setupSafe;
 //_currentData = debugState_multiSigCollecting;
-_currentData = debugState_single_multiSigSetup;
-
+//_currentData = debugState_single_multiSigSetup;
+//_currentData = debugState_multisigSetupFinished;
+_currentData = debugState_multiSigCollecting_New;
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
@@ -200,6 +207,8 @@ pcsc.on('reader', function (reader) {
                 } else if (_currentData.state === STATE_SAFEFUNDED) {
                     _currentData.state = STATE_MULTISIGSETUP
                     //SafeFunded (R) -> MultiSigSetup
+                } else if (_currentData.state === STATE_MULTISIGSETUPFINISHED) {
+                    _currentData.state = STATE_MULTISIGCOLLECTING;
                 } else if (_currentData.state == STATE_MULTISIGSUCCESS) {
                     //after a success we can initiate a new payout.
                     _currentData.multisigPayoutAddress = '';
@@ -342,24 +351,26 @@ async function state_multisigCollecting(card) {
         //console.log(signedTx);
         _currentData.multisigCollected[address] = signedTx;
 
-        const numOfCollectedMultisigTxs = Object.keys(_currentData.multisigCollected).length;
-        console.log(`numOfCollectedMultisigTxs : ${numOfCollectedMultisigTxs}`);
-
-        if ( numOfCollectedMultisigTxs  == _currentData.collectedSafeAddresses.length) {
-            // we now have all signatures, move forward.
-            _currentData.state = STATE_MULTISIGSENDING;
-            
-            const safeTransferTransaction = await deploySafe.sendMultisigTransaction(web3, card, _currentData.currentGnosisSafeAddress, _currentData.multisigTransaction, _currentData.multisigTransactionHash, _currentData.multisigCollected);
-            
-            _currentData.state = STATE_MULTISIGSUCCESS;
-
-        } else{
-            console.log('waiting for further transactions.' + numOfCollectedMultisigTxs + ' / ' + _currentData.collectedSafeAddresses.length);
-        }
+   
 
     } else {
         //overwrite existing ??
         console.log('There is already a signature existing for this address.');
+    }
+
+    const numOfCollectedMultisigTxs = Object.keys(_currentData.multisigCollected).length;
+    console.log(`numOfCollectedMultisigTxs : ${numOfCollectedMultisigTxs}`);
+
+    if ( numOfCollectedMultisigTxs  == _currentData.collectedSafeAddresses.length) {
+        // we now have all signatures, move forward.
+        _currentData.state = STATE_MULTISIGSENDING;
+        
+        const safeTransferTransaction = await deploySafe.sendMultisigTransaction(web3, card, _currentData.currentGnosisSafeAddress, _currentData.multisigTransaction, _currentData.multisigTransactionHash, _currentData.multisigCollected);
+        
+        _currentData.state = STATE_MULTISIGSUCCESS;
+
+    } else{
+        console.log('waiting for further transactions.' + numOfCollectedMultisigTxs + ' / ' + _currentData.collectedSafeAddresses.length);
     }
 }
 
@@ -378,7 +389,7 @@ async function state_multisigSetup(card) {
     _currentData.multisigTransaction = gnosisSafeTX;
     _currentData.multisigCollected = {};
 
-    _currentData.state = STATE_MULTISIGCOLLECTING;
+    _currentData.state = STATE_MULTISIGSETUPFINISHED;
 }
 
 function printCurrentData() {
