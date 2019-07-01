@@ -32,7 +32,7 @@ const debugState_multiSigCollecting = {"currentGnosisSafeAddress":"0xf81d752a2E7
 
 const debugState_single_funding = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"safeFundingSetup","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
 
-const debugState_single_MultisigCollecting = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"multiSigCollecting","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"0x756269ce7e0285670ecbd234f230645efba049d3","multisigCollected":{},"multisigTransactionHash":"0x0598274d7f9385310ecbe12c260db32c467d024211c3b4d47b4798fd1458bad2","multisigTransaction":{"to":"0x756269ce7e0285670ecbd234f230645efba049d3","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"}}
+const debugState_single_multiSigSetup = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"multiSigSetup","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
 
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
@@ -84,7 +84,7 @@ _currentData.multisigTransactionHash = '';
 //_currentData = debugState_multiSigSetup;
 //_currentData = debugState_setupSafe;
 //_currentData = debugState_multiSigCollecting;
-_currentData = debugState_single_MultisigCollecting;
+_currentData = debugState_single_multiSigSetup;
 
 
 app.get('/', function (req, res) {
@@ -200,6 +200,13 @@ pcsc.on('reader', function (reader) {
                 } else if (_currentData.state === STATE_SAFEFUNDED) {
                     _currentData.state = STATE_MULTISIGSETUP
                     //SafeFunded (R) -> MultiSigSetup
+                } else if (_currentData.state == STATE_MULTISIGSUCCESS) {
+                    //after a success we can initiate a new payout.
+                    _currentData.multisigPayoutAddress = '';
+                    _currentData.multisigTransaction = undefined;
+                    _currentData.multisigTransactionHash = undefined;
+                    _currentData.multisigCollected = {};
+                    _currentData.state = STATE_MULTISIGSETUP;
                 }
 
             } else if ((changes & this.SCARD_STATE_PRESENT) && (status.state & this.SCARD_STATE_PRESENT)) {
@@ -330,7 +337,7 @@ async function state_multisigCollecting(card) {
         console.log(`collecting multisig form ${address}`);
 
         //const signedTx = await card.getSignedTransactionObject(web3, _currentData.multisigTransaction, 1);
-        const signedTx = await card.getRSSignatureFromHash(_currentData.multisigTransactionHash, 1);
+        const signedTx = await card.getSignatureFromHash(_currentData.multisigTransactionHash, 1);
         console.log('got signed Transaction');
         //console.log(signedTx);
         _currentData.multisigCollected[address] = signedTx;
@@ -343,7 +350,9 @@ async function state_multisigCollecting(card) {
             _currentData.state = STATE_MULTISIGSENDING;
             
             const safeTransferTransaction = await deploySafe.sendMultisigTransaction(web3, card, _currentData.currentGnosisSafeAddress, _currentData.multisigTransaction, _currentData.multisigTransactionHash, _currentData.multisigCollected);
-        
+            
+            _currentData.state = STATE_MULTISIGSUCCESS;
+
         } else{
             console.log('waiting for further transactions.' + numOfCollectedMultisigTxs + ' / ' + _currentData.collectedSafeAddresses.length);
         }
