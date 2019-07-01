@@ -161,7 +161,7 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
         //console.log(`r: ${sig.r.toString("hex")}, s: ${sig.s.toString("hex")}, v: ${sig.v.toString(16)}`);
 
         //
-        var signaturePart = fixLengthTo32Bytes(trim0x(sig.r)) + fixLengthTo32Bytes(trim0x(sig.s)) + "1b" /* v should be length of 1 byte ??*/;
+        var signaturePart = fixLengthTo32Bytes(trim0x(sig.r)) + fixLengthTo32Bytes(trim0x(sig.s)) + trim0x(sig.v);
         console.log('appending: ' + signaturePart); 
 
         if (signaturePart.length != 130) {
