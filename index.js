@@ -38,7 +38,6 @@ const debugState_multiSigCollecting_New = {"currentGnosisSafeAddress":"0xf832ac8
 
 const debugState_high5_multiSigSetup = {"currentGnosisSafeAddress":"0x79c9e5C29e22fB665Dee3F0e726ccEBA3eF07ead","state":"multiSigSetup","collectedSafeAddresses":["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3","0x1b629f37aed1576c2e979aff68d2983f0ab13479","0x0774fe042bc23d01599b5a92b97b3125a4cb20ee","0xb222330ca92307d639b0bed948fe4f3577fc500b","0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
 
-
 //states:
 // deploy -> deploying -> deployed (R) -> collectingMultiSigAddresses -> setupSafe -> settingUpSafe -> SafeReady (R) -> SafeFundingSetup -> SafeFunding -> SafeFunded (R) -> MultiSigSetup -> MultiSigCollecting -> MultiSigSending -> MultisigSuccess.
 //                                                                                                     ^                                  ^                                    -
@@ -92,9 +91,9 @@ _currentData.multisigTransactionHash = '';
 //_currentData = debugState_single_multiSigSetup;
 //_currentData = debugState_multisigSetupFinished;
 //_currentData = debugState_multiSigCollecting_New;
-
 _currentData = debugState_high5_multiSigSetup;
 
+//_currentData = debugState_single_multiSigSetup;
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
@@ -222,11 +221,14 @@ pcsc.on('reader', function (reader) {
 
             } else if ((changes & this.SCARD_STATE_PRESENT) && (status.state & this.SCARD_STATE_PRESENT)) {
 
+                 
+
                 const stateBackup = Object.assign({}, _currentData);
                 _currentData.lastError = '';
                 try {
 
                     const card = newCard(reader);
+                    
                     if (_currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
                         //_currentData.state = STATE_SETUPSAFE
                         await state_collectingMultisigAddresses(card);

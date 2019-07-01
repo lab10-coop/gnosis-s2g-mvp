@@ -109,8 +109,8 @@ async function createGnosisSafeTransaction(web3, gnosisSafeAddress, toAddress, v
         value: value,
         data: "0x",
         operation: 0,
-        safeTxGas: 50000,
-        baseGas: 300000,
+        safeTxGas: web3.utils.toHex('50000'),
+        baseGas: web3.utils.toHex('300000'),
         gasPrice: '0x0',
         gasToken: "0x0000000000000000000000000000000000000000",
         refundReceiver: "0x0000000000000000000000000000000000000000",
@@ -146,15 +146,14 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
     const safe = createGnosisSafeObject(web3, gnosisSafeAddress);
     //console.log('gnosis safe created');
     const signers = Object.keys( multisigCollected ); // doesn't have to be the same addr. It's just easier to manage if so.
-    //const sortedSigners = signers.sort();
+    const sortedSigners = signers.sort();
     //console.log(`signers (sorted): ${sortedSigners}`);
     console.log(`Signers: ${JSON.stringify(signers)}`);
     let sigString = "0x";
 
-    Object.entries(multisigCollected).forEach(([address, sig]) => {
-        if (sig == undefined) {
-            return;
-        }
+    sortedSigners.forEach(address => {
+        
+        var sig =  multisigCollected[address];
         console.log( `appending signature from ${address}`);
         //console.log(`type: ${typeof sig.r}`);
         //console.log(sig.r);
@@ -194,7 +193,7 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
         //from: config.safe.executor.address,
         to: gnosisSafeAddress,
         data: execTxData,
-        gas: web3.utils.toHex('1000000'),
+        gas: web3.utils.toHex('300000'),
         gasPrice: web3.utils.toHex('100000000000'),
         //chainId: 1 // if not set, it will fail for ganache due to eth_chainId not being supported
     };
