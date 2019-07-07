@@ -8,9 +8,32 @@ var path = require('path');
 var deploySafe = require('./deploySafe.js');
 var pcsc = pcsc();
 
+
+
+const web3_options = {
+    transactionConfirmationBlocks: 1,
+    defaultGasPrice: '100000000000',
+    //transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
+}
+
+const web3_address = 'ws://ws.tau1.artis.network';
+
+const localWebserverListeningPort = 3000;
+
+//const web3_address = 'https://rpc.tau1.artis.network';
+//const web3_address = 'http://127.0.0.1:9545/';
+//const web3_address = 'https://rpc.sigma1.artis.network';
+
+
+
+
 var _currentData = {};
 
-//const debugState_safeReady = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "safeReady", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
+
+//it is possible to copy the "state data" out from the UI
+//and use it here for further testing.
+//this are only examples - 
+//since you need to use the same smart cards in order to continue from this states.
 
 const debugState_setupSafe = {
     "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3",
@@ -21,21 +44,12 @@ const debugState_setupSafe = {
     "multisigCollected": {},
     "multisigTransactionHash": ""
 }
-
 const debugState_multiSigSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "multiSigSetup", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
-
-
 const debugState_saveFundingSetup = { "currentGnosisSafeAddress": "0xf81d752a2E7617C70267aaD8d3Ff927312a369E3", "state": "safeFundingSetup", "collectedSafeAddresses": ["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3", "0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"], "lastError": "", "multisigPayoutAddress": "", "multisigCollected": {}, "multisigTransactionHash": "" };
-
-
 const debugState_single_funding = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"safeFundingSetup","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
-
 const debugState_single_multiSigSetup = {"currentGnosisSafeAddress":"0xc60E8ceD9c78a0DF295951521A31e707AC96c935","state":"multiSigSetup","collectedSafeAddresses":["0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
-
 const debugState_multisigSetupFinished = {"currentGnosisSafeAddress":"0x0d7283ca1ca73239a7d11a02Dd8d4a1BC3B3750c","state":"multiSigSetupFinished","collectedSafeAddresses":["0xb222330ca92307d639b0bed948fe4f3577fc500b","0x1b629f37aed1576c2e979aff68d2983f0ab13479"],"lastError":"","multisigPayoutAddress":"0x756269ce7e0285670ecbd234f230645efba049d3","multisigCollected":{},"multisigTransaction":{"to":"0x756269ce7e0285670ecbd234f230645efba049d3","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"},"multisigTransactionHash":"0xc27b1129cb032f7076350aa49cb2f74781952b95cf155aa9f651b3f7562fdc81"}
-
 const debugState_multiSigCollecting_New = {"currentGnosisSafeAddress":"0xf832ac85da49eD332B07ced539D06B0e6C3A50b3","state":"multiSigCollecting","collectedSafeAddresses":["0xb222330ca92307d639b0bed948fe4f3577fc500b"],"lastError":"","multisigPayoutAddress":"0x756269ce7e0285670ecbd234f230645efba049d3","multisigCollected":{"0xb222330ca92307d639b0bed948fe4f3577fc500b":{"r":"0x00ff11a3944175d503b96280d1005db99cd940424481ed5e8495c9556bdfe5a20f","s":"0x07cab04b375dd0a492f6f2b72d4abd4147aa1cadcbf5336461166541c83cce25","v":"0x1b"}},"multisigTransaction":{"to":"0x756269ce7e0285670ecbd234f230645efba049d3","value":"0x16345785d8a0000","data":"0x","operation":0,"safeTxGas":50000,"baseGas":300000,"gasPrice":"0x0","gasToken":"0x0000000000000000000000000000000000000000","refundReceiver":"0x0000000000000000000000000000000000000000","nonce":"0x0"},"multisigTransactionHash":"0xd25874707ad18958028a8d7eb80336e14d36d05b4516f0aa6de1a742dddc4e11"}
-
 const debugState_high5_multiSigSetup = {"currentGnosisSafeAddress":"0x79c9e5C29e22fB665Dee3F0e726ccEBA3eF07ead","state":"multiSigSetup","collectedSafeAddresses":["0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3","0x1b629f37aed1576c2e979aff68d2983f0ab13479","0x0774fe042bc23d01599b5a92b97b3125a4cb20ee","0xb222330ca92307d639b0bed948fe4f3577fc500b","0xe856a0cad6368c541cf11d9d9c8554b156fa40fd"],"lastError":"","multisigPayoutAddress":"","multisigCollected":{},"multisigTransactionHash":""}
 
 //states:
@@ -70,11 +84,6 @@ const STATE_MULTISIGSENDING = 'multiSigSending'
 const STATE_MULTISIGSUCCESS = 'multisigSuccess'
 
 
-
-
-//const state_collectingMultisigAddresses
-
-//_currentData.currentGnosisSafeAddress = '0xC59791222C5513995AAE19283af5Fc3b3B4595Ce'
 _currentData.currentGnosisSafeAddress = ''
 _currentData.state = STATE_DEPLOY;
 _currentData.collectedSafeAddresses = []; //array of '0xabc..890' string with the addresses that should get added to the safe.
@@ -83,17 +92,6 @@ _currentData.multisigPayoutAddress = '';
 _currentData.multisigCollected = {}; // map with the safeAddress as index and a signature as value.
 _currentData.multisigTransaction = undefined; // Transaction object that is used to send out funds to multisigPayoutAddress
 _currentData.multisigTransactionHash = '';
-
-
-//_currentData = debugState_multiSigSetup;
-//_currentData = debugState_setupSafe;
-//_currentData = debugState_multiSigCollecting;
-//_currentData = debugState_single_multiSigSetup;
-//_currentData = debugState_multisigSetupFinished;
-//_currentData = debugState_multiSigCollecting_New;
-_currentData = debugState_high5_multiSigSetup;
-
-//_currentData = debugState_single_multiSigSetup;
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
@@ -131,21 +129,7 @@ app.get('/deployNewGnosisSave.json', async function (req, res) {
     res.send(JSON.stringify(_currentData));
 })
 
-
-app.listen(3000);
-
-
-const web3_options = {
-    transactionConfirmationBlocks: 1,
-    defaultGasPrice: '100000000000',
-    //transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
-}
-
-const web3_address = 'ws://ws.tau1.artis.network';
-//const web3_address = 'https://rpc.tau1.artis.network';
-//const web3_address = 'http://127.0.0.1:9545/';
-//const web3_address = 'https://rpc.sigma1.artis.network';
-
+app.listen(localWebserverListeningPort);
 
 const web3 = new Web3(web3_address, null, web3_options);
 //var web3 = new Web3('http://127.0.0.1:9545/');
@@ -221,20 +205,14 @@ pcsc.on('reader', function (reader) {
 
             } else if ((changes & this.SCARD_STATE_PRESENT) && (status.state & this.SCARD_STATE_PRESENT)) {
 
-                 
-
                 const stateBackup = Object.assign({}, _currentData);
                 _currentData.lastError = '';
                 try {
-
                     const card = newCard(reader);
                     
                     if (_currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
-                        //_currentData.state = STATE_SETUPSAFE
                         await state_collectingMultisigAddresses(card);
-                        //_currentData.collectedSafeAddresses                    
                     } else if (_currentData.state === STATE_DEPLOY) {
-                        //console.error('state not implemented yet: ' + _currentData.state);
                         const deploy = await state_deploy(card);
                         console.log('deployed: ' + deploy);
                     } else if (_currentData.state === STATE_SETUPSAFE) {
@@ -278,7 +256,6 @@ pcsc.on('error', function (err) {
     console.log('PCSC error', err.message);
 });
 
-//STATE_COLLECTINGMULTISIGADDRESSES
 async function state_collectingMultisigAddresses(card) {
 
     if (!_currentData.currentGnosisSafeAddress) {
@@ -286,10 +263,6 @@ async function state_collectingMultisigAddresses(card) {
         return;
     }
     const cardAddress = await card.getAddress(1);
-
-    //const currentCreator = await deploySafe.getSafeCreator(web3, _currentData.currentGnosisSafeAddress);
-
-    //if the used address has not been added yet, than add it. it is used later to setup the safe.
 
     if (_currentData.collectedSafeAddresses.indexOf(cardAddress) === -1) {
         console.log('Setup Safe: new multi sig enabled address: ' + cardAddress);
@@ -308,12 +281,7 @@ async function state_deploy(card) {
     _currentData.state = STATE_DEPLOYED;
     _currentData.currentGnosisSafeAddress = deployedSafe.address;
     _currentData.collectedSafeAddresses = [];
-    //_currentData.lastError = '';
 
-
-
-    //console.log(JSON.stringify(addressOfLastSafe));  
-    //console.log(safe)
 }
 
 async function state_safeFundingSetup(card) {
@@ -328,19 +296,14 @@ async function state_safeFundingSetup(card) {
     };
 
     console.log(`tx: ${JSON.stringify(tx, null, 2)}`);
-            
 
     //console.log('to-transfer: ' + tx.value);
 
-    //try {
-        _currentData.state = STATE_SAFEFUNDING;
-        const txReceipt = await card.signAndSendTransaction(web3, tx, 1);
-        //todo : check Balance or something ?
+    _currentData.state = STATE_SAFEFUNDING;
+    const txReceipt = await card.signAndSendTransaction(web3, tx, 1);
+    //todo : check Balance or something ?
+    _currentData.state = STATE_SAFEFUNDED;
 
-        _currentData.state = STATE_SAFEFUNDED;
-    // } catch (err) {
-    //     _currentData.lastError = '';
-    // }
 }
 
 async function state_multisigCollecting(card) {
@@ -413,12 +376,3 @@ function printState() {
 printCurrentData();
 printState();
 console.log("System Ready, waiting for reader. if no reader shows up - sudo systemctl restart pcscd - and restart this project might help !");
-
-
-
-
-// web3.eth.getTransactionReceipt('0x521665fd4f1c1bad79ef9e4767d4d0584c1a5fee90cd3e0563f8ae7e9fe2bee1', (error, receipt) => {
-
-//     console.log('Got receipt:');
-//     console.log(receipt);
-// });
