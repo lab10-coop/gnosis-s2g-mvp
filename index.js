@@ -1,3 +1,9 @@
+/**
+* @file Gnosis Security2G MVP
+* @author Thomas Haller <thomas.haller@lab10.coop>
+* @license GPLv3
+* @version 0.1
+*/
 
 var pcsc = require('pcsclite');
 var Security2GoCard = require('./submodules/web3-s2g');
