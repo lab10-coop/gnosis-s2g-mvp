@@ -4,7 +4,7 @@ Using Infineon Security2Go smartcard to sign multisig transactions for a gnosis 
 A minimal viable product to deliver a proof of concept for using those Infineon Security2Go smart cards for interacting with gnosis safe.
 for more details, [check out the details](https://github.com/gnosis/GECO/pull/27)
 
-#about
+# about
 
 The project pops up a local webserver that connects to a local NFC reader (see prerequesites) to allow you to create and interact with a [Gnosis Safe](https://github.com/gnosis/safe-contracts)
 the WebUI guides you through different steps of the lifetime of a safe.
@@ -13,7 +13,7 @@ the WebUI guides you through different steps of the lifetime of a safe.
 -   Funding that Safe with 1 unit of native currency.
 -   Getting out 0.1 units of native currency using multisig again.
 
-#prerequisites
+# prerequisites
 
 - A NFC Card reader that is supported by [PCSC lite](https://pcsclite.apdu.fr/)
 - Access to an Ethereum compatible blockchain (we use [ARTIS](https://artis.eco) in this example), but this can also be a truffle development chain as well.
@@ -25,7 +25,7 @@ the WebUI guides you through different steps of the lifetime of a safe.
 - [Node](https://nodejs.org/en/) v10 LTS (tested with v10.15.3) - other versions could work as well. (requirement: libudev and libusb 1.0.8 or later)
 - [NPM](https://www.npmjs.com/get-npm) for making the install easier (tested with v6.4.1)
 
-#build and run
+# build and run
 
 `npm i`
 `npm start`
