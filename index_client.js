@@ -120,14 +120,15 @@ function loadCurrentData() {
 
     getJSON("./currentData.json", function(err, data) {
         console.log(data);
-        currentData = data;
-        currentDataJson=JSON.stringify(currentData);
-        //console.log(currentDataJson);
-        //currentData = JSON.parse(currentDataJson); 
 
+        const oldDataJSON = JSON.stringify(currentData);
+        const newDataJSON = JSON.stringify(data);
 
-        
-        //ulCollectedSafeAddresses
+        if (oldDataJSON != newDataJSON) {
+            currentData = data;
+            currentDataJson=newDataJSON;
+            updateUI();
+        }
     });
 }
 
@@ -135,5 +136,5 @@ loadCurrentData();
 //updateUI();
 window.setInterval(function(){
     loadCurrentData();
-    updateUI();
+    
 }, 200);
