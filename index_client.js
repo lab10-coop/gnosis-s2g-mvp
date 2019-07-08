@@ -60,15 +60,15 @@ function updateUI() {
     } else if (currentData.state === 'safeFunded') {
         mainHeadline.innerText = 'Safe is now funded, remove card to proceed';
     } else if (currentData.state === 'multiSigSetup') {
-        mainHeadline.innerText = 'Choose a card as target for paying out 0.1 ATS from the safe';
+        mainHeadline.innerText = 'Choose a card as target for paying out 1 ATS from the safe';
     } else if (currentData.state === 'multiSigSetupFinished') {
         mainHeadline.innerText = `Paying out 0.1 ATS to ${currentData.multisigPayoutAddress}. please remove card`;
     } else if (currentData.state === 'multiSigCollecting') {
         mainHeadline.innerText = `Collected ${Object.keys(currentData.multisigCollected).length} / ${currentData.collectedSafeAddresses.length} signatures. Lay missing cards to sign`;
     } else if (currentData.state === 'multiSigSending') {
         mainHeadline.innerText = 'Multisig transfer is processed by the blockchain, please standby';
-    } else if (currentData.state === 'multiSigSuccess') {
-        mainHeadline.innerText = 'Multisig transfer was successful!';
+    } else if (currentData.state === 'multisigSuccess') {
+        mainHeadline.innerText = 'Multisig transfer was successful! Remove card to go back to Fund the safe again.';
     } else {
         mainHeadline.innerText = 'state: ' + currentData.state;
     }

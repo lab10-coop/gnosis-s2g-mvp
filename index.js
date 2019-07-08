@@ -135,7 +135,6 @@ app.get('/deployNewGnosisSave.json', async function (req, res) {
 })
 
 app.get('/logo_*.png', async function (req, res) {
-    console.log('path: ', req.path);
     res.sendFile(path.join(__dirname, req.path));
 })
 
@@ -210,7 +209,7 @@ pcsc.on('reader', function (reader) {
                     _currentData.multisigTransaction = undefined;
                     _currentData.multisigTransactionHash = undefined;
                     _currentData.multisigCollected = {};
-                    _currentData.state = STATE_MULTISIGSETUP;
+                    _currentData.state = STATE_SAFEFUNDINGSETUP;
                 }
 
             } else if ((changes & this.SCARD_STATE_PRESENT) && (status.state & this.SCARD_STATE_PRESENT)) {
