@@ -15,7 +15,6 @@ var gnosisSafe = require('./gnosisSafe.js');
 var pcsc = pcsc();
 
 
-
 const web3_options = {
     transactionConfirmationBlocks: 1,
     defaultGasPrice: '100000000000',
@@ -133,6 +132,11 @@ app.get('/deployNewGnosisSave.json', async function (req, res) {
     _currentData.lastError = ''
 
     res.send(JSON.stringify(_currentData));
+})
+
+app.get('/logo_*.png', async function (req, res) {
+    console.log('path: ', req.path);
+    res.sendFile(path.join(__dirname, req.path));
 })
 
 app.listen(localWebserverListeningPort);
@@ -357,7 +361,7 @@ async function state_multisigSetup(card) {
     console.log('Multisig Setup target:' + address);
     _currentData.multisigPayoutAddress = address;
 
-    const gnosisSafeTX = await gnosisSafe.createGnosisSafeTransaction(web3, _currentData.currentGnosisSafeAddress, _currentData.multisigPayoutAddress,web3.utils.toHex(web3.utils.toWei('0.1')));
+    const gnosisSafeTX = await gnosisSafe.createGnosisSafeTransaction(web3, _currentData.currentGnosisSafeAddress, _currentData.multisigPayoutAddress,web3.utils.toHex(web3.utils.toWei('1')));
     console.log('gnosis safe TX:', gnosisSafeTX);
     var txHash = await gnosisSafe.getGnosisSafeTransactionHash(web3, _currentData.currentGnosisSafeAddress, gnosisSafeTX);
     console.log('txHash:', txHash);
