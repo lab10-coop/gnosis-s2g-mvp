@@ -21,8 +21,8 @@ the WebUI guides you through different steps of the lifetime of a safe.
     -   with address 1 initialised
     -   with some funding (at minimum 1.5 ATS (in the case of ARTIS))
     -   for a better experience 3 NFC Cards are adviced. (1 for setting up and funding the save, 2 for multisig)
-- Linux OS (Tested with Ubuntu 18 LTS - but most other common Linux ditros should do as well)
-- [Node](https://nodejs.org/en/) v10 LTS (tested with v10.15.3) - other versions could work as well. (requirement: libudev and libusb 1.0.8 or later)
+- Linux OS (Tested with Ubuntu 18 LTS - but most other common Linux ditros should do as well. requirement: libudev and libusb 1.0.8 or later)
+- [Node](https://nodejs.org/en/) v10 LTS (tested with v10.15.3) - other versions could work as well.
 - [NPM](https://www.npmjs.com/get-npm) for making the install easier (tested with v6.4.1)
 
 # build and run
