@@ -11,7 +11,7 @@ var Web3 = require('web3');
 var express = require('express');
 var app = express();
 var path = require('path');
-var deploySafe = require('./deploySafe.js');
+var gnosisSafe = require('./gnosisSafe.js');
 var pcsc = pcsc();
 
 
@@ -144,7 +144,7 @@ async function setupSafe(card) {
 
     console.log('setting up safe');
     _currentData.state = STATE_SETTINGUPSAFE;
-    const setupSafeResult = await deploySafe.setupSafe(web3, _currentData.currentGnosisSafeAddress, _currentData.collectedSafeAddresses, card);
+    const setupSafeResult = await gnosisSafe.setupSafe(web3, _currentData.currentGnosisSafeAddress, _currentData.collectedSafeAddresses, card);
 
     if (setupSafeResult) {
         console.log('setting up safe done!');
@@ -281,7 +281,7 @@ async function state_collectingMultisigAddresses(card) {
 async function state_deploy(card) {
 
     _currentData.state = STATE_DEPLOYING;
-    const deployedSafe = await deploySafe.deployNewSafe(web3, card);
+    const deployedSafe = await gnosisSafe.deployNewSafe(web3, card);
     console.log('deployedSafe=>');
     console.log(deployedSafe.address);
     _currentData.state = STATE_DEPLOYED;
@@ -342,7 +342,7 @@ async function state_multisigCollecting(card) {
         // we now have all signatures, move forward.
         _currentData.state = STATE_MULTISIGSENDING;
         
-        const safeTransferTransaction = await deploySafe.sendMultisigTransaction(web3, card, _currentData.currentGnosisSafeAddress, _currentData.multisigTransaction, _currentData.multisigTransactionHash, _currentData.multisigCollected);
+        const safeTransferTransaction = await gnosisSafe.sendMultisigTransaction(web3, card, _currentData.currentGnosisSafeAddress, _currentData.multisigTransaction, _currentData.multisigTransactionHash, _currentData.multisigCollected);
         
         _currentData.state = STATE_MULTISIGSUCCESS;
 
@@ -357,9 +357,9 @@ async function state_multisigSetup(card) {
     console.log('Multisig Setup target:' + address);
     _currentData.multisigPayoutAddress = address;
 
-    const gnosisSafeTX = await deploySafe.createGnosisSafeTransaction(web3, _currentData.currentGnosisSafeAddress, _currentData.multisigPayoutAddress,web3.utils.toHex(web3.utils.toWei('0.1')));
+    const gnosisSafeTX = await gnosisSafe.createGnosisSafeTransaction(web3, _currentData.currentGnosisSafeAddress, _currentData.multisigPayoutAddress,web3.utils.toHex(web3.utils.toWei('0.1')));
     console.log('gnosis safe TX:', gnosisSafeTX);
-    var txHash = await deploySafe.getGnosisSafeTransactionHash(web3, _currentData.currentGnosisSafeAddress, gnosisSafeTX);
+    var txHash = await gnosisSafe.getGnosisSafeTransactionHash(web3, _currentData.currentGnosisSafeAddress, gnosisSafeTX);
     console.log('txHash:', txHash);
 
     _currentData.multisigTransactionHash = txHash;
