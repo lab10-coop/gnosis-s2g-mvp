@@ -1,6 +1,0 @@
-[submodule "submodules/safe-contracts"]
-	path = submodules/safe-contracts
-	url = git@github.com:gnosis/safe-contracts.git
-[submodule "submodules/web3-s2g"]
-	path = submodules/web3-s2g
-	url = git@code.lab10.io:graz/04-artis/smartcard/web3-s2g.git

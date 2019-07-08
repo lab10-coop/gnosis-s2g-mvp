@@ -6,7 +6,7 @@
 */
 
 var pcsc = require('pcsclite');
-var Security2GoCard = require('./submodules/web3-s2g');
+var Security2GoCard = require('./web3-s2g.js');
 var Web3 = require('web3');
 var express = require('express');
 var app = express();
