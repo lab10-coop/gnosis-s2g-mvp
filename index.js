@@ -381,4 +381,5 @@ function printState() {
 
 printCurrentData();
 printState();
+console.log("connected to " + web3_address);
 console.log("System Ready, waiting for reader. if no reader shows up - sudo systemctl restart pcscd - and restart this project might help !");
