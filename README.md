@@ -27,8 +27,11 @@ the Web UI guides you through different steps of the lifetime of a Safe:
 
 # Build and run
 
-`npm ci`
-`npm start`
+
+```
+npm ci
+npm start
+```
 
 This pops up a web server on port 3000.  
 Navigate to http://localhost:3000 in a browser of your choice and follow the instructions.
