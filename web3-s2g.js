@@ -65,6 +65,49 @@ function getGenericErrorAsString(errorCode) {
   return `ErrorCode Unknown:${InttoHex(errorCode[0])} ${InttoHex(errorCode[1])}`;
 }
 
+function parseSelectAppResponse(response) {
+  const result = {
+    pinActivationStatus: 0,
+    cardID: '',
+    versionStringRaw: '',
+    versionString: '',
+    successRaw: '',
+    success: true,
+    errorString: '',
+  };
+
+  if (response.length === 2) {
+    result.success = false;
+    getGenericErrorAsString(response);
+    result.errorString();
+  } else if (response.length === 20) {
+    const pinActivationStatusByte = response[0];
+    result.pinActivationStatus = pinActivationStatusByte;
+    result.cardID = response.slice(1, 11);
+    result.versionStringRaw = response.slice(11, 18);
+    result.versionString = result.versionStringRaw.toString('ascii');
+
+    const responseSuccess = response.slice(19, 20);
+
+    if (responseSuccess[0] === 0x90 && responseSuccess[1] === 0x0) {
+      result.success = true;
+    } else {
+      // according to S2G documentation that else should never hit.
+      result.success = false;
+      result.errorString = getGenericErrorAsString(responseSuccess);
+    }
+    // result.pinActivationStatus = response[0];
+  } else if (response.length === 14) {
+    // TODO:
+    // according to Documentation, SELECT APP response should be 20 bytes, but is 14.
+    console.log(toHexString(response));
+  } else {
+    throw Error(`unexpected SelectAppResponse length: ${response.length}`);
+  }
+
+  return result;
+}
+
 /**
 * Sends raw byte commands to the card and receives the response.
 * sends the always required SelectApp command in advance.
@@ -92,7 +135,9 @@ function sendCommand(card, bytes, receiveHandler = null) {
           if (errSelectAppTransmit) {
             console.error(errSelectAppTransmit);
           } else {
-          // todo: validate result.
+            const selectAppResponse = parseSelectAppResponse(dataSelectAppTransmit);
+            card.logSigning(`SelectApp result: ${JSON.stringify(selectAppResponse)} `);
+            // todo: validate result.
             card.reader.transmit(Buffer.from(bytes), maxResponseLength, protocol, (err, dataTransmit) => {
               if (err) {
               // todo: interprate error here ?
