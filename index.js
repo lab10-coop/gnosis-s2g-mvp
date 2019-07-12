@@ -152,7 +152,6 @@ async function state_multisigCollecting(card) {
 
     console.log(`collecting multisig form ${address}`);
 
-    // const signedTx = await card.getSignedTransactionObject(web3, _currentData.multisigTransaction, 1);
     const signedTx = await card.getSignatureFromHash(currentData.multisigTransactionHash, 1);
     console.log('got signed Transaction');
     // console.log(signedTx);
@@ -300,7 +299,12 @@ pcsc.on('reader', (reader) => {
             console.log('Disconnected');
           }
         });
-        if (currentData.state === STATE_DEPLOYED) {
+        if (currentData.state === STATE_DEPLOYING) {
+          // it can happen that a deploying does not become a success
+          // in that case wwe switch back to Deploy.
+          // example reason: Connecting Error:Error: SCardConnect error: Card is unpowered.(0x80100067)
+          currentData.state = STATE_DEPLOY;
+        } else if (currentData.state === STATE_DEPLOYED) {
           currentData.state = STATE_COLLECTINGMULTISIGADDRESSES;
         } else if (currentData.state === STATE_SAFEREADY) {
           currentData.state = STATE_SAFEFUNDINGSETUP;
