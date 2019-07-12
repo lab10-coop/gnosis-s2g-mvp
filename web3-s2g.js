@@ -119,12 +119,14 @@ function parseSelectAppResponse(response) {
 function sendCommand(card, bytes, receiveHandler = null) {
   const maxResponseLength = 128;
   card.logSigning('connecting...');
-  card.reader.connect({}, (errConnect, protocol) => {
+  card.reader.connect({}, (errConnect, protocolConnnected) => {
     if (errConnect) {
       console.error(`Connecting Error:${errConnect}`);
     } else {
-      // eslint-disable-next-line no-param-reassign
-      protocol = card.PROTOCOL_ID;
+      let protocol = protocolConnnected;
+      if (protocol === undefined) {
+        protocol = card.PROTOCOL_ID;
+      }
       card.logSigning(`protocol:${protocol}`);
       const selectAppIncldingCommand = [0x00, 0xA4, 0x04, 0x00, 0x0D, /* start of body */
         0xD2, 0x76, 0x00, 0x00, 0x04, 0x15, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01 /* end of body */, 12];
@@ -225,7 +227,9 @@ class Security2GoCard {
      */
   constructor(reader) {
     this.reader = reader;
-    this.PROTOCOL_ID = 2; // todo: dont know meaning yet...
+    // todo: in our case protocol was allways 2. sometimes reader.connect() delievers a protocol number, sometimes not
+    // this is a very uncool workaround for this problem.
+    this.PROTOCOL_ID = 2;
     this.log_debug_signing = false;
     this.log_debug_web3 = false;
   }

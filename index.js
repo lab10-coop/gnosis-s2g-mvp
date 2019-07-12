@@ -27,9 +27,9 @@ const web3Options = {
 
 const localWebserverListeningPort = 3000;
 
-// const web3_address = 'https://rpc.tau1.artis.network';
-// const web3_address = 'http://127.0.0.1:9545/';
-const web3Address = 'https://rpc.sigma1.artis.network';
+const web3Address = 'https://rpc.tau1.artis.network';
+// const web3Address = 'http://127.0.0.1:9545/';
+// const web3Address = 'https://rpc.sigma1.artis.network';
 
 const web3 = new Web3(web3Address, null, web3Options);
 
@@ -123,6 +123,7 @@ async function state_deploy(card) {
   currentData.state = STATE_DEPLOYED;
   currentData.currentGnosisSafeAddress = deployedSafe.address;
   currentData.collectedSafeAddresses = [];
+  return deployedSafe;
 }
 
 async function state_safeFundingSetup(card) {
@@ -331,7 +332,7 @@ pcsc.on('reader', (reader) => {
             await state_collectingMultisigAddresses(card);
           } else if (currentData.state === STATE_DEPLOY) {
             const deploy = await state_deploy(card);
-            console.log(`deployed: ${deploy}`);
+            // console.log(`deployed: ${deploy.contractAddress}`);
           } else if (currentData.state === STATE_SETUPSAFE) {
             await setupSafe(card);
           } else if (currentData.state === STATE_SAFEFUNDINGSETUP) {
