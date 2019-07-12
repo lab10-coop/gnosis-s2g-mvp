@@ -76,46 +76,49 @@ function getGenericErrorAsString(errorCode) {
 function sendCommand(card, bytes, receiveHandler = null) {
   const maxResponseLength = 128;
   card.logSigning('connecting...');
-  card.reader.connect({}, (err, protocol) => {
-    if (err) {
-      console.error(`Connecting Error:${err}`);
+  card.reader.connect({}, (errConnect, protocol) => {
+    if (errConnect) {
+      console.error(`Connecting Error:${errConnect}`);
     } else {
       // eslint-disable-next-line no-param-reassign
       protocol = card.PROTOCOL_ID;
       card.logSigning(`protocol:${protocol}`);
       const selectAppIncldingCommand = [0x00, 0xA4, 0x04, 0x00, 0x0D, /* start of body */
         0xD2, 0x76, 0x00, 0x00, 0x04, 0x15, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01 /* end of body */, 12];
-      card.reader.transmit(new Buffer(selectAppIncldingCommand), maxResponseLength, protocol, (err, data) => {
-        card.logSigning('select App Completed');
-        if (err) {
-          console.error(err);
-        } else {
+      card.reader.transmit(
+        Buffer.from(selectAppIncldingCommand), maxResponseLength, protocol,
+        (errSelectAppTransmit, dataSelectAppTransmit) => {
+          card.logSigning('select App Completed');
+          if (errSelectAppTransmit) {
+            console.error(errSelectAppTransmit);
+          } else {
           // todo: validate result.
-          card.reader.transmit(new Buffer(bytes), maxResponseLength, protocol, (err, data) => {
-            if (err) {
+            card.reader.transmit(Buffer.from(bytes), maxResponseLength, protocol, (err, dataTransmit) => {
+              if (err) {
               // todo: interprate error here ?
-              card.logSigning('Error on transmitting');
-              card.logSigning(err);
-              return [];
-            }
-            card.logSigning('Data received', data);
+                card.logSigning('Error on transmitting');
+                card.logSigning(err);
+                return [];
+              }
+              card.logSigning('Data received', dataTransmit);
 
-            // asume all 2 byte results are errors ?!
-            if (data.length === 2 && isError(data)) {
-              const errorMsg = getGenericErrorAsString(data);
-              console.error(`Received Data is Error received: ${errorMsg}`);
-              throw errorMsg;
-            }
+              // asume all 2 byte results are errors ?!
+              if (dataTransmit.length === 2 && isError(dataTransmit)) {
+                const errorMsg = getGenericErrorAsString(dataTransmit);
+                console.error(`Received Data is Error received: ${errorMsg}`);
+                throw errorMsg;
+              }
 
-            card.logSigning(receiveHandler);
-            // reader.close();
-            // pcsc.close();
-            if (receiveHandler != null) {
-              receiveHandler(data);
-            }
-          });
-        }
-      });
+              card.logSigning(receiveHandler);
+              // reader.close();
+              // pcsc.close();
+              if (receiveHandler != null) {
+                receiveHandler(dataTransmit);
+              }
+            });
+          }
+        },
+      );
     }
   });
 }
@@ -255,11 +258,9 @@ class Security2GoCard {
     * @param {*} rawTransaction a Web3 style transaction.
     * @param {byte} cardKeyIndex keyIndex index (0..255) of the Security2Go Card.
     * defaults to 1 (first generated key on the card)
-    * @param {number} nonce optional nonce, if not supplied,
-    * the nonce is retrieved with a RPC call by the provided web3 object.
     */
-  async signTransaction(web3, rawTransaction, cardKeyIndex = 1, nonce) {
-    const tx = await this.getSignedTransactionObject(web3, rawTransaction, cardKeyIndex, nonce);
+  async signTransaction(web3, rawTransaction, cardKeyIndex = 1) {
+    const tx = await this.getSignedTransactionObject(web3, rawTransaction, cardKeyIndex);
     return toHex(tx.serialize());
   }
 
@@ -350,22 +351,23 @@ class Security2GoCard {
     * @param {*} rawTransaction a Web3 style transaction.
     * @param {byte} cardKeyIndex keyIndex index (0..255) of the Security2Go Card.
     * defaults to 1 (first generated key on the card)
-    * @param {number} nonce optional nonce, if not supplied,
-    * the nonce is retrieved with a RPC call by the provided web3 object.
     */
-  async getSignedTransactionObject(web3, rawTransaction, cardKeyIndex = 1, nonce) {
+  async getSignedTransactionObject(web3, rawTransaction, cardKeyIndex = 1) {
     const address = await this.getAddress(cardKeyIndex);
     this.logSigning('address');
     this.logSigning(address);
 
-    if (nonce) {
-      rawTransaction.nonce = nonce;
-    } else {
-      rawTransaction.nonce = await web3.eth.getTransactionCount(address);
+    console.log(`rawTransaction: ${JSON.stringify(rawTransaction)}`);
+
+    const transaction = JSON.parse(JSON.stringify(rawTransaction));
+
+    if (!transaction.nonce) {
+      transaction.nonce = await web3.eth.getTransactionCount(address);
     }
 
+    console.log(`tx: ${JSON.stringify(transaction)}`);
 
-    const tx = new Tx(rawTransaction);
+    const tx = new Tx(transaction);
 
     const hashBytes = tx.hash(false);
     const hash = toHex(hashBytes, false);
