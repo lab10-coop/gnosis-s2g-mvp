@@ -9,8 +9,6 @@
 - execute with safe.execTransaction()
 */
 
-const ethUtil = require('ethereumjs-util');
-const ethTx = require('ethereumjs-tx');
 const Web3 = require('web3');
 const path = require('path');
 const fs = require('fs');
@@ -19,42 +17,111 @@ const Tx = require('ethereumjs-tx');
 // const config = require('./config');
 // const safeAbi = require('./GnosisSafe_abi');
 
-const log_debug = true;
+const configLogDebug = true;
 
-let web3; let
-  safe;
 
 function logDebug(message) {
-  if (log_debug) {
+  if (configLogDebug) {
     console.log(message);
   }
 }
 
+async function sendTx(web3, toAddress, encodedAbi, card) {
+  // Prepare the raw transaction information
+  const rawTx = {
+    // nonce: nonceHex,
+
+    gasPrice: web3.utils.toHex('100000000000'),
+    gasLimit: 6721975, // <- Ganache hardcoded gas limit
+    data: encodedAbi,
+    // from: privateKey_address,
+    to: toAddress,
+  };
+
+  // let tx = new Tx(rawTx);
+
+  const cardKeyIndex = 1;
+  const signature = await card.signTransaction(web3, rawTx, cardKeyIndex);
+
+  // Submit the smart contract deployment transaction
+  const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
+
+  logDebug(`ContractAddress: ${txResult}`);
+  logDebug(txResult);
+  logDebug('ca:');
+  logDebug(txResult.contractAddress);
+
+  return txResult;
+}
+
+async function deployContract(web3, contractName, card) {
+  const cardKeyIndex = 1;
+  // It will read the ABI & byte code contents from the JSON file in ./build/contracts/ folder
+  const jsonOutputName = `${path.parse(contractName).name}.json`;
+  const jsonFile = `./contracts/build/${jsonOutputName}`;
+
+  // Read the JSON file contents
+  const contractJsonContent = fs.readFileSync(jsonFile, 'utf8');
+  const jsonOutput = JSON.parse(contractJsonContent);
+
+  // Retrieve the ABI
+  const { abi } = jsonOutput;
+  // Retrieve the byte code
+  const { bytecode } = jsonOutput;
+  const contract = new web3.eth.Contract(abi);
+  const deployedContract = contract.deploy({ data: bytecode });
+
+  const encodedData = deployedContract.encodeABI();
+
+  const address = await card.getAddress(cardKeyIndex);
+  const nonceHex = web3.utils.toHex(await web3.eth.getTransactionCount(address));
+
+  logDebug(`nonceHex:${nonceHex}`);
+
+  // Prepare the raw transaction information
+  const rawTx = {
+    nonce: nonceHex,
+    gasPrice: web3.utils.toHex('100000000000'),
+    gasLimit: 6721975, // <- Ganache hardcoded gas limit
+    data: encodedData,
+    from: address,
+  };
+
+  const tx = new Tx(rawTx);
+  const signature = await card.signTransaction(web3, tx, cardKeyIndex);
+
+  // logDebug(signature.toString('hex'));
+  const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
+
+  logDebug(`ContractAddress: ${txResult}`);
+  logDebug(txResult);
+  logDebug('ca:');
+  logDebug(txResult.contractAddress);
+
+  contract.address = txResult.contractAddress;
+
+  return contract;
+}
+
 async function deployNewSafe(web3, card) {
-  return await deployContract(web3, 'GnosisSafe', card);
+  return deployContract(web3, 'GnosisSafe', card);
 }
 
-function toHexString(byteArray) {
-  let s = '';
-  byteArray.forEach((byte) => {
-    s += (`0${  (byte & 0xFF).toString(16)}`).slice(-2);
-  });
-  return s;
-}
-
-function trim0x(hexString) {
+function trim0x(hexStringInput) {
+  let hexString = hexStringInput;
   if (hexString.startsWith('0x')) {
     hexString = hexString.substring(2, hexString.length);
   }
   return hexString;
 }
 
-function fixLengthTo32Bytes(hexString) {
+function fixLengthTo32Bytes(hexStringInput) {
+  let hexString = hexStringInput;
   while (hexString.length > 64) {
     if (hexString.startsWith('00')) {
       hexString = hexString.substring(2, hexString.length);
     } else {
-      throw `unable to fix hexstring to length 32: ${hexString}`;
+      throw Error(`unable to fix hexstring to length 32: ${hexString}`);
     }
   }
 
@@ -66,7 +133,7 @@ function fixLengthTo32Bytes(hexString) {
 
 function createGnosisSafeObject(web3, gnosisSafeAddress) {
   const contractName = 'GnosisSafe';
-  const jsonOutputName = `${path.parse(contractName).name }.json`;
+  const jsonOutputName = `${path.parse(contractName).name}.json`;
   const jsonFile = `./contracts/build/${jsonOutputName}`;
 
   // Read the JSON file contents
@@ -82,7 +149,11 @@ function createGnosisSafeObject(web3, gnosisSafeAddress) {
 async function setupSafe(web3, gnosisSafeAddress, addresses, card) {
   const gnosisSafeContract = createGnosisSafeObject(web3, gnosisSafeAddress);
   const zeroAddress = '0x0000000000000000000000000000000000000000';
-  const setupEncodedAbi = gnosisSafeContract.methods.setup(addresses, addresses.length, zeroAddress/* to */, '0x0' /* data */, zeroAddress /* address paymentToken */, '0x0' /* uint256 payment */, zeroAddress /* address payable paymentReceiver */).encodeABI();
+  const setupEncodedAbi = gnosisSafeContract.methods.setup(
+    addresses, addresses.length, zeroAddress/* to */, '0x0' /* data */,
+    zeroAddress /* address paymentToken */, '0x0' /* uint256 payment */,
+    zeroAddress, /* address payable paymentReceiver */
+  ).encodeABI();
 
   logDebug(`got encodedAbi for setup call: ${setupEncodedAbi}`);
   const sendResult = await sendTx(web3, gnosisSafeAddress, setupEncodedAbi, card);
@@ -127,7 +198,13 @@ async function getGnosisSafeTransactionHash(web3, gnosisSafeAddress, gnosisSafeT
   // console.log(gnosisSafeTransaction);
   // console.log(gnosisSafeAddress);
 
-  const result = await gnosisSafe.methods.getTransactionHash(gnosisSafeTransaction.to, gnosisSafeTransaction.value, gnosisSafeTransaction.data, gnosisSafeTransaction.operation, gnosisSafeTransaction.safeTxGas, gnosisSafeTransaction.baseGas, gnosisSafeTransaction.gasPrice, gnosisSafeTransaction.gasToken, gnosisSafeTransaction.refundReceiver, gnosisSafeTransaction.nonce).call();
+  const result = await gnosisSafe.methods.getTransactionHash(
+    gnosisSafeTransaction.to, gnosisSafeTransaction.value, gnosisSafeTransaction.data,
+    gnosisSafeTransaction.operation, gnosisSafeTransaction.safeTxGas,
+    gnosisSafeTransaction.baseGas, gnosisSafeTransaction.gasPrice,
+    gnosisSafeTransaction.gasToken, gnosisSafeTransaction.refundReceiver,
+    gnosisSafeTransaction.nonce,
+  ).call();
 
   // console.log('txHash: ' + result);
   // console.log(result);
@@ -135,9 +212,14 @@ async function getGnosisSafeTransactionHash(web3, gnosisSafeAddress, gnosisSafeT
   return result;
 }
 
-// sendMultisigTransaction(web3, card, _currentData.multisigPayoutAddress, _currentData.multisigTransaction, _currentData.multisigTransactionHash, _currentData.multisigCollected)
+// sendMultisigTransaction(web3, card, _currentData.multisigPayoutAddress, _currentData.multisigTransaction,
+// _currentData.multisigTransactionHash, _currentData.multisigCollected)
 
-async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTransaction, multisigTransactionHash, multisigCollected) {
+async function sendMultisigTransaction(
+  web3, card, gnosisSafeAddress,
+  multisigTransaction, multisigTransactionHash,
+  multisigCollected,
+) {
   console.log('sending multisig transaction.');
   const safe = createGnosisSafeObject(web3, gnosisSafeAddress);
   // console.log('gnosis safe created');
@@ -159,8 +241,8 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
     console.log(`appending: ${signaturePart}`);
 
     // r: 64 + s: 64 + v: 2 = 130 chars per signature.
-    if (signaturePart.length != 130) {
-      throw 'Expected string length of signature to be 130, leading zero problem ?';
+    if (signaturePart.length !== 130) {
+      throw Error('Expected string length of signature to be 130, leading zero problem ?');
     }
     sigString += signaturePart;
     console.log(`sigString: ${sigString}`);
@@ -176,9 +258,13 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
   // await safe.methods.execTransaction.apply(null, execTxArgs).send( { from: config.safe.executor.address } )
 
   const execTxDataOld = safe.methods.execTransaction.apply(null, execTxArgs).encodeABI();
-  const execTxData = safe.methods.execTransaction(multisigTransaction.to, multisigTransaction.value, multisigTransaction.data, multisigTransaction.operation, multisigTransaction.safeTxGas, multisigTransaction.baseGas, multisigTransaction.gasPrice, multisigTransaction.gasToken, multisigTransaction.refundReceiver, sigString).encodeABI();
+  const execTxData = safe.methods.execTransaction(
+    multisigTransaction.to, multisigTransaction.value, multisigTransaction.data, multisigTransaction.operation,
+    multisigTransaction.safeTxGas, multisigTransaction.baseGas, multisigTransaction.gasPrice,
+    multisigTransaction.gasToken, multisigTransaction.refundReceiver, sigString,
+  ).encodeABI();
 
-  if (execTxDataOld != execTxData) {
+  if (execTxDataOld !== execTxData) {
     console.error('Difference detected: ');
     console.error(execTxData);
     console.error(execTxDataOld);
@@ -198,111 +284,15 @@ async function sendMultisigTransaction(web3, card, gnosisSafeAddress, multisigTr
   console.log(`execCallRet: ${execCallRet}`);
 
   // console.log(`outerTxObj: ${JSON.stringify(outerTxObj, null, 2)}`);
-  // const execCallRet = await web3.eth.call(outerTxObj);
-  // console.log(`execCallRet: ${execCallRet}`);
 
-  // sendTransaction()
-
-  // const signedExecTxObj = await web3.eth.accounts.signTransaction(outerTxObj, `0x${config.safe.executor.privateKey}`);
-  // console.log(`signedExecTxObj: ${JSON.stringify(signedExecTxObj, null, 2)}`);
-
-  // check
-  // let execTxSigner = web3.eth.accounts.recoverTransaction(signedExecTxObj.rawTransaction);
-  // console.log(`execTxSigner: ${execTxSigner}`);
-
-  // const sentTx = await web3.eth.sendSignedTransaction(signedExecTxObj.rawTransaction);
-
-
-  return await sendTx(web3, gnosisSafeAddress, execTxData, card);
+  return sendTx(web3, gnosisSafeAddress, execTxData, card);
 
 
   // card.signAndSendTransaction(web3, outerTxObj, 1);
 }
 
-async function sendTx(web3, toAddress, encodedAbi, card) {
-  // Prepare the raw transaction information
-  const rawTx = {
-    // nonce: nonceHex,
-
-    gasPrice: web3.utils.toHex('100000000000'),
-    gasLimit: 6721975, // <- Ganache hardcoded gas limit
-    data: encodedAbi,
-    // from: privateKey_address,
-    to: toAddress,
-  };
-
-  // let tx = new Tx(rawTx);
-
-  const cardKeyIndex = 1;
-  const signature = await card.signTransaction(web3, rawTx, cardKeyIndex);
-
-  // Submit the smart contract deployment transaction
-  txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
-
-  logDebug(`ContractAddress: ${txResult}`);
-  logDebug(txResult);
-  logDebug('ca:');
-  logDebug(txResult.contractAddress);
-
-  return txResult;
-}
-
-
-async function deployContract(web3, contractName, card) {
-  const cardKeyIndex = 1;
-  // It will read the ABI & byte code contents from the JSON file in ./build/contracts/ folder
-  const jsonOutputName = `${path.parse(contractName).name}.json`;
-  const jsonFile = `./contracts/build/${jsonOutputName}`;
-
-  // Read the JSON file contents
-  const contractJsonContent = fs.readFileSync(jsonFile, 'utf8');
-  const jsonOutput = JSON.parse(contractJsonContent);
-
-  // Retrieve the ABI
-  const { abi } = jsonOutput;
-  // Retrieve the byte code
-  const { bytecode } = jsonOutput;
-  const contract = new web3.eth.Contract(abi);
-  const deployedContract = contract.deploy({ data: bytecode });
-
-  const encodedData = deployedContract.encodeABI();
-
-  const address = await card.getAddress(cardKeyIndex);
-  const nonceHex = web3.utils.toHex(await web3.eth.getTransactionCount(address));
-
-  logDebug(`nonceHex:${nonceHex}`);
-
-  // Prepare the raw transaction information
-  const rawTx = {
-    nonce: nonceHex,
-    gasPrice: web3.utils.toHex('100000000000'),
-    gasLimit: 6721975, // <- Ganache hardcoded gas limit
-    data: encodedData,
-    from: address,
-  };
-
-  const tx = new Tx(rawTx);
-  const signature = await card.signTransaction(web3, tx, cardKeyIndex);
-
-
-  // logDebug(signature.toString('hex'));
-
-  txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
-
-  logDebug(`ContractAddress: ${txResult}`);
-  logDebug(txResult);
-  logDebug('ca:');
-  logDebug(txResult.contractAddress);
-
-  contract.address = txResult.contractAddress;
-
-  return contract;
-}
 
 exports.Web3 = Web3;
-// exports.config = config;
-exports.web3 = web3;
-exports.safe = safe;
 exports.deployNewSafe = deployNewSafe;
 exports.setupSafe = setupSafe;
 exports.getGnosisSafeTransactionHash = getGnosisSafeTransactionHash;
