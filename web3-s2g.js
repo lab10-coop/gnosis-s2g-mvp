@@ -160,6 +160,7 @@ function sendCommand(card, bytes, receiveHandler = null) {
               if (receiveHandler != null) {
                 receiveHandler(dataTransmit);
               }
+              return true;
             });
           }
         },
@@ -213,7 +214,7 @@ async function generateSignatureRaw(card, bytes, keyIndex) {
   }
 
   const func = util.promisify(generateSignatureRawFunction);
-  return await func({ card, bytes, keyIndex });
+  return func({ card, bytes, keyIndex });
 }
 
 class Security2GoCard {
@@ -274,7 +275,7 @@ class Security2GoCard {
 
     const func = util.promisify(getPublicKeyFunction);
 
-    return await func({ card: this, command });
+    return func({ card: this, command });
     // card.logSigning(responseFunction);
     // return new Promise(resolve => {});
   }
@@ -311,11 +312,12 @@ class Security2GoCard {
 
   /**
     * Generates a ethereum compatible secp256k1 signature for the given hash
-    * @param {string} hash hex encoded hash string.
+    * @param {string} hashString hex encoded hash string.
     * @param {byte} cardKeyIndex keyIndex index (0..255) of the Security2Go Card.
     * defaults to 1 (first generated key on the card)
     */
-  async getSignatureFromHash(hash, cardKeyIndex = 1) {
+  async getSignatureFromHash(hashString, cardKeyIndex = 1) {
+    let hash = hashString;
     let hashBytes;
 
     if (typeof hash === 'string') {
