@@ -352,6 +352,7 @@ pcsc.on('reader', (reader) => {
           currentData.lastError = `error:${err}`;
           // _currentData.state = 'error';
           console.error(currentData.lastError);
+          console.error(err.stack);
         }
         // doSomeTests(reader);
       }
