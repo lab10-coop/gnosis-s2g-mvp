@@ -27,7 +27,7 @@ const web3Options = {
 
 const localWebserverListeningPort = 3000;
 
-const web3Address = 'https://rpc.tau1.artis.network';
+const web3Address = 'http://rpc.tau1.artis.network';
 // const web3Address = 'http://127.0.0.1:9545/';
 // const web3Address = 'https://rpc.sigma1.artis.network';
 
@@ -331,8 +331,7 @@ pcsc.on('reader', (reader) => {
           if (currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
             await state_collectingMultisigAddresses(card);
           } else if (currentData.state === STATE_DEPLOY) {
-            const deploy = await state_deploy(card);
-            // console.log(`deployed: ${deploy.contractAddress}`);
+            await state_deploy(card);
           } else if (currentData.state === STATE_SETUPSAFE) {
             await setupSafe(card);
           } else if (currentData.state === STATE_SAFEFUNDINGSETUP) {
