@@ -219,7 +219,7 @@ app.get('/currentData.json', (req, res) => {
   res.send(JSON.stringify(currentData));
 });
 
-app.get('/settingUpSafe.json', (req, res) => {
+app.get('/settingUpSafe', (req, res) => {
   if (currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
     if (currentData.collectedSafeAddresses.length === 0) {
       currentData.lastError = 'There is at minimum 1 address required to initialize a gnosis safe';
@@ -230,8 +230,8 @@ app.get('/settingUpSafe.json', (req, res) => {
   res.send(JSON.stringify(currentData));
 });
 
-app.get('/deployNewGnosisSave.json', async (req, res) => {
-  console.log('deployNewGnosisSave.json');
+app.get('/deployNewGnosisSafe', async (req, res) => {
+  console.log('deployNewGnosisSafe');
   // const newSafeAddress = deployNewSafe();
   currentData.currentGnosisSafeAddress = undefined;
   currentData.state = STATE_DEPLOY;
