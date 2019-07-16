@@ -23,7 +23,7 @@ function updateUI() {
   const jsonDisplay = document.getElementById('jsonDisplay');
   jsonDisplay.value = currentDataJson;
 
-  ulCollectedSafeAddresses = document.getElementById('ulCollectedSafeAddresses');
+  const ulCollectedSafeAddresses = document.getElementById('ulCollectedSafeAddresses');
   if (ulCollectedSafeAddresses) {
     ulCollectedSafeAddresses.innerHTML = '';
     if (currentData.collectedSafeAddresses) {
@@ -63,7 +63,8 @@ function updateUI() {
   } else if (currentData.state === 'multiSigSetupFinished') {
     mainHeadline.innerText = `Paying out 1 ATS to ${currentData.multisigPayoutAddress}. please remove card`;
   } else if (currentData.state === 'multiSigCollecting') {
-    mainHeadline.innerText = `Collected ${Object.keys(currentData.multisigCollected).length} / ${currentData.collectedSafeAddresses.length} signatures. Lay missing cards to sign`;
+    mainHeadline.innerText = `Collected ${Object.keys(currentData.multisigCollected).length} / `
+     + `${currentData.collectedSafeAddresses.length} signatures. Lay missing cards to sign`;
   } else if (currentData.state === 'multiSigSending') {
     mainHeadline.innerText = 'Multisig transfer is processed by the blockchain, please standby';
   } else if (currentData.state === 'multisigSuccess') {
@@ -73,7 +74,8 @@ function updateUI() {
   }
 
   const setupThisGnosisSafe = document.getElementById('setupThisGnosisSafe');
-  const showSetupButton = (currentData.state === 'collectingMultiSigAddresses' && currentData.collectedSafeAddresses.length > 0);
+  const showSetupButton = (currentData.state === 'collectingMultiSigAddresses'
+    && currentData.collectedSafeAddresses.length > 0);
   setupThisGnosisSafe.style.visibility = showSetupButton ? 'visible' : 'hidden';
 
   function setStateMachineStyle(stateName) {
