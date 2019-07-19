@@ -31,25 +31,14 @@ async function sendTx(web3, toAddress, encodedAbi, card) {
     // nonce: nonceHex,
 
     gasPrice: web3.utils.toHex('100000000000'),
-    gasLimit: 6721975, // <- Ganache hardcoded gas limit
+    gasLimit: '0x6691B7', // <- Ganache hardcoded gas limit
     data: encodedAbi,
-    // from: privateKey_address,
+    from: await card.getAddress(),
     to: toAddress,
   };
 
-  // let tx = new Tx(rawTx);
-
-  const cardKeyIndex = 1;
-  const signature = await card.signTransaction(web3, rawTx, cardKeyIndex);
-
-  // Submit the smart contract deployment transaction
-  const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
-
-  logDebug(`ContractAddress: ${txResult}`);
-  logDebug(txResult);
-  logDebug('ca:');
-  logDebug(txResult.contractAddress);
-
+  const txResult = await web3.eth.sendTransaction(rawTx);
+  console.log('Transaction sent!');
   return txResult;
 }
 
@@ -81,7 +70,7 @@ async function deployContract(web3, contractName, card) {
   const rawTx = {
     nonce: nonceHex,
     gasPrice: web3.utils.toHex('100000000000'),
-    gasLimit: 6721975, // <- Ganache hardcoded gas limit
+    gasLimit: '0x6691B7', // <- Ganache hardcoded gas limit
     data: encodedData,
     from: address,
   };
@@ -91,6 +80,9 @@ async function deployContract(web3, contractName, card) {
 
   // logDebug(signature.toString('hex'));
   const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
+
+
+  // const txResult = await web3.eth.sendTransaction(rawTx);
 
   logDebug(`ContractAddress: ${txResult}`);
   logDebug(txResult);

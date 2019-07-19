@@ -17,21 +17,66 @@ const gnosisSafe = require('./gnosisSafe.js');
 const pcsc = Pcsc();
 
 
+const debugState = {
+  currentGnosisSafeAddress: '0x437Ae985227574721f1Cf00d62A6F1Eb57D8BAC9', state: 'setupSafe', collectedSafeAddresses: ['0xe856a0cad6368c541cf11d9d9c8554b156fa40fd', '0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3'], lastError: "error:Error: Connection refused or URL couldn't be resolved: https://rpc.tau1.artis.network", multisigPayoutAddress: '', multisigCollected: {}, multisigTransactionHash: '',
+};
+
+// interface SignedTransaction {
+//   messageHash: string,
+//   v: string,
+//   r: string,
+//   s: string,
+//   rawTransaction: string
+// }
+
+class MinervaCardSigner {
+  constructor() {
+    this.card = null;
+    this.cardKeyIndex = 1;
+    this.web3 = null;
+  }
+
+  sign(rawTx) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log('signing with MinervaCardSigner');
+        const signedTransaction = await this.card.getSignedTransaction(this.web3, rawTx, this.cardKeyIndex);
+
+        // console.log(`signed with MinervaCardSigner r: ${signedTransaction.r}`);
+        // console.log(`signed with MinervaCardSigner: ${JSON.stringify(signedTransaction)}`);
+
+        const recoveredTransaction = this.web3.eth.accounts.recoverTransaction(signedTransaction.rawTransaction);
+        console.log(`recovered account: ${recoveredTransaction}`);
+
+        resolve(signedTransaction);
+      } catch (error) {
+        console.error(`error while signing: ${error}`);
+        console.error(`error while signing: ${JSON.stringify(error)}`);
+        reject(error);
+      }
+    });
+  }
+}
+
+const cardSigner = new MinervaCardSigner();
+
 const web3Options = {
   transactionConfirmationBlocks: 1,
   defaultGasPrice: '100000000000',
-  // transactionSigner:  <------- TODO: Maybe we can create an web3 provider that internally uses the smartcard ??
+  transactionSigner: cardSigner,
 };
 
 // const web3_address = 'ws://ws.tau1.artis.network';
 
 const localWebserverListeningPort = 3000;
 
-const web3Address = 'http://rpc.tau1.artis.network';
+const web3Address = 'https://rpc.tau1.artis.network';
 // const web3Address = 'http://127.0.0.1:9545/';
 // const web3Address = 'https://rpc.sigma1.artis.network';
 
 const web3 = new Web3(web3Address, null, web3Options);
+
+cardSigner.web3 = web3;
 
 let currentData = {};
 
@@ -97,6 +142,8 @@ currentData.multisigCollected = {}; // map with the safeAddress as index and a s
 // Transaction object that is used to send out funds to multisigPayoutAddress
 currentData.multisigTransaction = undefined;
 currentData.multisigTransactionHash = '';
+
+currentData = debugState;
 
 /* eslint-disable camelcase */
 
@@ -268,6 +315,7 @@ function newCard(reader) {
   const card = new Security2GoCard.Security2GoCard(reader);
   card.log_debug_signing = true;
   card.log_debug_web3 = true;
+  cardSigner.card = card;
 
   return card;
 }
@@ -297,7 +345,7 @@ pcsc.on('reader', (reader) => {
           if (err) {
             console.log(err);
           } else {
-            console.log('Disconnected');
+            console.log('disconnected');
           }
         });
         if (currentData.state === STATE_DEPLOYING) {
@@ -309,6 +357,8 @@ pcsc.on('reader', (reader) => {
           currentData.state = STATE_COLLECTINGMULTISIGADDRESSES;
         } else if (currentData.state === STATE_SAFEREADY) {
           currentData.state = STATE_SAFEFUNDINGSETUP;
+        } else if (currentData.state === STATE_SETTINGUPSAFE) {
+          currentData.state = STATE_SETUPSAFE;
         } else if (currentData.state === STATE_SAFEFUNDED) {
           currentData.state = STATE_MULTISIGSETUP;
           // SafeFunded (R) -> MultiSigSetup
@@ -355,6 +405,7 @@ pcsc.on('reader', (reader) => {
           currentData = Object.assign({}, stateBackup);
           currentData.lastError = `error:${err}`;
           // _currentData.state = 'error';
+          console.error(JSON.stringify(err));
           console.error(currentData.lastError);
           console.error(err.stack);
         }
