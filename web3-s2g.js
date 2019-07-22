@@ -514,6 +514,29 @@ class Security2GoCard {
   }
 }
 
+class MinervaCardSigner {
+  constructor() {
+    this.card = null;
+    this.cardKeyIndex = 1;
+    this.web3 = null;
+  }
+
+  async sign(rawTx) {
+    console.log('signing with MinervaCardSigner');
+    const signedTransaction = await this.card.getSignedTransaction(this.web3, rawTx, this.cardKeyIndex);
+
+    // console.log(`signed with MinervaCardSigner r: ${signedTransaction.r}`);
+    // console.log(`signed with MinervaCardSigner: ${JSON.stringify(signedTransaction)}`);
+
+    const recoveredTransaction = this.web3.eth.accounts.recoverTransaction(signedTransaction.rawTransaction);
+    console.log(`recovered account: ${recoveredTransaction}`);
+
+    return signedTransaction;
+  }
+}
+
+
 module.exports = {
   Security2GoCard,
+  MinervaCardSigner,
 };

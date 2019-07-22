@@ -29,28 +29,8 @@ const pcsc = Pcsc();
 //   rawTransaction: string
 // }
 
-class MinervaCardSigner {
-  constructor() {
-    this.card = null;
-    this.cardKeyIndex = 1;
-    this.web3 = null;
-  }
 
-  async sign(rawTx) {
-    console.log('signing with MinervaCardSigner');
-    const signedTransaction = await this.card.getSignedTransaction(this.web3, rawTx, this.cardKeyIndex);
-
-    // console.log(`signed with MinervaCardSigner r: ${signedTransaction.r}`);
-    // console.log(`signed with MinervaCardSigner: ${JSON.stringify(signedTransaction)}`);
-
-    const recoveredTransaction = this.web3.eth.accounts.recoverTransaction(signedTransaction.rawTransaction);
-    console.log(`recovered account: ${recoveredTransaction}`);
-
-    return signedTransaction;
-  }
-}
-
-const cardSigner = new MinervaCardSigner();
+const cardSigner = new Security2GoCard.MinervaCardSigner();
 
 const web3Options = {
   transactionConfirmationBlocks: 1,
@@ -169,7 +149,7 @@ async function state_safeFundingSetup(card) {
   // Prepare the raw transaction information
   const tx = {
     gasPrice: web3.utils.numberToHex('100000000000'),
-    gasLimit: web3.utils.numberToHex('100000'),
+    gas: web3.utils.numberToHex('100000'),
     // value: web3.utils.toWei('1'),
     value: web3.utils.toHex(web3.utils.toWei('1')),
     to: currentData.currentGnosisSafeAddress,
