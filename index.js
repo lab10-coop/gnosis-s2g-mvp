@@ -17,9 +17,9 @@ const gnosisSafe = require('./gnosisSafe.js');
 const pcsc = Pcsc();
 
 
-const debugState = {
-  currentGnosisSafeAddress: '0x437Ae985227574721f1Cf00d62A6F1Eb57D8BAC9', state: 'setupSafe', collectedSafeAddresses: ['0xe856a0cad6368c541cf11d9d9c8554b156fa40fd', '0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3'], lastError: "error:Error: Connection refused or URL couldn't be resolved: https://rpc.tau1.artis.network", multisigPayoutAddress: '', multisigCollected: {}, multisigTransactionHash: '',
-};
+// const debugState = {
+//   currentGnosisSafeAddress: '0x437Ae985227574721f1Cf00d62A6F1Eb57D8BAC9', state: 'setupSafe', collectedSafeAddresses: ['0xe856a0cad6368c541cf11d9d9c8554b156fa40fd', '0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3'], lastError: "error:Error: Connection refused or URL couldn't be resolved: https://rpc.tau1.artis.network", multisigPayoutAddress: '', multisigCollected: {}, multisigTransactionHash: '',
+// };
 
 // interface SignedTransaction {
 //   messageHash: string,
@@ -36,25 +36,17 @@ class MinervaCardSigner {
     this.web3 = null;
   }
 
-  sign(rawTx) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        console.log('signing with MinervaCardSigner');
-        const signedTransaction = await this.card.getSignedTransaction(this.web3, rawTx, this.cardKeyIndex);
+  async sign(rawTx) {
+    console.log('signing with MinervaCardSigner');
+    const signedTransaction = await this.card.getSignedTransaction(this.web3, rawTx, this.cardKeyIndex);
 
-        // console.log(`signed with MinervaCardSigner r: ${signedTransaction.r}`);
-        // console.log(`signed with MinervaCardSigner: ${JSON.stringify(signedTransaction)}`);
+    // console.log(`signed with MinervaCardSigner r: ${signedTransaction.r}`);
+    // console.log(`signed with MinervaCardSigner: ${JSON.stringify(signedTransaction)}`);
 
-        const recoveredTransaction = this.web3.eth.accounts.recoverTransaction(signedTransaction.rawTransaction);
-        console.log(`recovered account: ${recoveredTransaction}`);
+    const recoveredTransaction = this.web3.eth.accounts.recoverTransaction(signedTransaction.rawTransaction);
+    console.log(`recovered account: ${recoveredTransaction}`);
 
-        resolve(signedTransaction);
-      } catch (error) {
-        console.error(`error while signing: ${error}`);
-        console.error(`error while signing: ${JSON.stringify(error)}`);
-        reject(error);
-      }
-    });
+    return signedTransaction;
   }
 }
 
@@ -143,7 +135,7 @@ currentData.multisigCollected = {}; // map with the safeAddress as index and a s
 currentData.multisigTransaction = undefined;
 currentData.multisigTransactionHash = '';
 
-currentData = debugState;
+// currentData = debugState;
 
 /* eslint-disable camelcase */
 

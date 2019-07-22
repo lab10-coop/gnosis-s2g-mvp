@@ -147,8 +147,6 @@ function sendCommand(card, bytes, receiveHandler = null) {
                 card.logSigning(err);
                 return [];
               }
-              card.logSigning('Data received', dataTransmit);
-
               // asume all 2 byte results are errors ?!
               if (dataTransmit.length === 2 && isError(dataTransmit)) {
                 const errorMsg = getGenericErrorAsString(dataTransmit);

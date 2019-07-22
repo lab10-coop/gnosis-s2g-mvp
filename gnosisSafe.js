@@ -75,18 +75,20 @@ async function deployContract(web3, contractName, card) {
     from: address,
   };
 
-  const tx = new Tx(rawTx);
-  const signature = await card.signTransaction(web3, tx, cardKeyIndex);
+  // const tx = new Tx(rawTx);
+  const txResult = await web3.eth.sendTransaction(rawTx);
+
+  // const signature = await card.signTransaction(web3, tx, cardKeyIndex);
 
   // logDebug(signature.toString('hex'));
-  const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
+  // const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
 
 
   // const txResult = await web3.eth.sendTransaction(rawTx);
 
-  logDebug(`ContractAddress: ${txResult}`);
+  logDebug('Contract deployed:');
   logDebug(txResult);
-  logDebug('ca:');
+  logDebug('contract address:');
   logDebug(txResult.contractAddress);
 
   contract.address = txResult.contractAddress;
