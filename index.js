@@ -28,9 +28,9 @@ const web3Options = {
 
 const localWebserverListeningPort = 3000;
 
-// const web3Address = 'https://rpc.tau1.artis.network';
+const web3Address = 'https://rpc.tau1.artis.network';
 // const web3Address = 'http://127.0.0.1:9545/';
-const web3Address = 'https://rpc.sigma1.artis.network';
+// const web3Address = 'https://rpc.sigma1.artis.network';
 
 const web3 = new Web3(web3Address, null, web3Options);
 

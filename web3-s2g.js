@@ -309,8 +309,11 @@ class Security2GoCard {
     * @returns hex-serialized transaction object (use getSignedTransactionObject() to get the raw object)
     */
   async signTransaction(web3, rawTransaction, cardKeyIndex = 1) {
-    const tx = await this.getSignedTransactionObject(web3, rawTransaction, cardKeyIndex);
-    return toHex(tx.serialize());
+    // const tx = await this.getSignedTransactionObject(web3, rawTransaction, cardKeyIndex);
+    // return toHex(tx.serialize());
+
+    const tx = await this.getSignedTransaction(web3, rawTransaction, cardKeyIndex);
+    return tx.rawTransaction;
   }
 
   /**
@@ -399,22 +402,15 @@ class Security2GoCard {
    * @param {object} rawTransaction web3 style transaction object
    * @param {byte} cardKeyIndex
    * @returns object with r,s,v,hash,rawTransaction. compatible with interface required by web3.
-   * compatible with transactionSigner. in addition it has a ethereumjstx property that holds the
-   * ethereumjstx object that was used constructing this required values.
+   * compatible with transactionSigner.
    */
   async getSignedTransaction(web3, rawTransaction, cardKeyIndex = 1) {
-    // const signedTransactionObject = await this.getSignedTransactionObject(web3, rawTransaction, cardKeyIndex);
-    // console.log('got signed transaction');
-    // rawTransaction;
-
     const address = await this.getAddress(cardKeyIndex);
     this.logSigning('address');
     this.logSigning(address);
 
     console.log(`rawTransaction: ${JSON.stringify(rawTransaction)}`);
-
     const transaction = JSON.parse(JSON.stringify(rawTransaction));
-
 
     if (!transaction.nonce) {
       transaction.nonce = web3.utils.toHex(await web3.eth.getTransactionCount(address));
@@ -428,7 +424,6 @@ class Security2GoCard {
       v: '0x',
       messageHash: '0x',
       rawTransaction: '0x',
-      ethereumjstx: '0x',
     };
 
     const hashBytes = tx.hash(false);
@@ -448,24 +443,9 @@ class Security2GoCard {
 
     result.rawTransaction = toHex(tx.serialize());
 
-    result.ethereumjstx = tx;
-
     console.log('transaction:', result);
     return result;
   }
-
-  /**
-    * Generates an EthereumTx transaction object that includes the signature as R,S,V components.
-    * @param {Web3} web3 a Web3 instance.
-    * @param {*} rawTransaction a Web3 style transaction.
-    * @param {byte} cardKeyIndex keyIndex index (0..255) of the Security2Go Card.
-    * defaults to 1 (first generated key on the card)
-    */
-  async getSignedTransactionObject(web3, rawTransaction, cardKeyIndex = 1) {
-    const signedTransaction = await this.getSignedTransaction(web3, rawTransaction, cardKeyIndex);
-    return signedTransaction.ethereumjstx;
-  }
-
 
   /**
      * @param {Web3} web3 a Web3 instance
