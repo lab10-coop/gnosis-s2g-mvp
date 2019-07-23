@@ -381,10 +381,6 @@ pcsc.on('reader', (reader) => {
         currentData.lastError = '';
         try {
           const card = newCard(reader);
-
-          const address = await card.getAddress(1);
-          console.log(`address: ${address}`);
-
           if (currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
             await state_collectingMultisigAddresses(card);
           } else if (currentData.state === STATE_DEPLOY) {
