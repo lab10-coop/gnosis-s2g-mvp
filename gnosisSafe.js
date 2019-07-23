@@ -11,7 +11,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const Tx = require('ethereumjs-tx');
+// const Tx = require('ethereumjs-tx');
 
 // const config = require('./config');
 // const safeAbi = require('./GnosisSafe_abi');

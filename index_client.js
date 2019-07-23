@@ -65,10 +65,12 @@ function updateUI() {
   } else if (currentData.state === 'multiSigCollecting') {
     mainHeadline.innerText = `Collected ${Object.keys(currentData.multisigCollected).length} / `
      + `${currentData.collectedSafeAddresses.length} signatures. Lay missing cards to sign`;
+  } else if (currentData.state === 'multiSigCollected') {
+    mainHeadline.innerText = 'Collected all required signatures. Lay card to send Payout Transaction';
   } else if (currentData.state === 'multiSigSending') {
-    mainHeadline.innerText = 'Multisig transfer is processed by the blockchain, please standby';
+    mainHeadline.innerText = 'Multisig Payout Transaction is processed by the blockchain, please standby';
   } else if (currentData.state === 'multisigSuccess') {
-    mainHeadline.innerText = 'Multisig transfer was successful! Remove card to go back to fund the safe again.';
+    mainHeadline.innerText = 'Multisig payout transfer was successful! Remove card to go back to fund the safe again.';
   } else {
     mainHeadline.innerText = `state: ${currentData.state}`;
   }
@@ -80,7 +82,7 @@ function updateUI() {
 
   function setStateMachineStyle(stateName) {
     const divElement = document.getElementById(`status_${stateName}`);
-    divElement.style.textDecoration = (currentData.state == stateName) ? 'underline' : 'none';
+    divElement.style.textDecoration = (currentData.state === stateName) ? 'underline' : 'none';
   }
 
   errorLine.innerText = currentData.lastError;
@@ -99,6 +101,7 @@ function updateUI() {
   setStateMachineStyle('multiSigSetup');
   setStateMachineStyle('multiSigSetupFinished');
   setStateMachineStyle('multiSigCollecting');
+  setStateMachineStyle('multiSigCollected');
   setStateMachineStyle('multiSigSending');
   setStateMachineStyle('multisigSuccess');
 
@@ -124,7 +127,7 @@ function loadCurrentData() {
     const oldDataJSON = JSON.stringify(currentData);
     const newDataJSON = JSON.stringify(data);
 
-    if (oldDataJSON != newDataJSON) {
+    if (oldDataJSON !== newDataJSON) {
       currentData = data;
       currentDataJson = newDataJSON;
       updateUI();

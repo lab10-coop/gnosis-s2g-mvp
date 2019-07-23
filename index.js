@@ -100,6 +100,7 @@ const STATE_SAFEFUNDED = 'safeFunded';
 const STATE_MULTISIGSETUP = 'multiSigSetup';
 const STATE_MULTISIGSETUPFINISHED = 'multiSigSetupFinished';
 const STATE_MULTISIGCOLLECTING = 'multiSigCollecting';
+const STATE_MULTISIGCOLLECTED = 'multiSigCollected';
 const STATE_MULTISIGSENDING = 'multiSigSending';
 const STATE_MULTISIGSUCCESS = 'multisigSuccess';
 
@@ -168,6 +169,7 @@ async function state_collectingMultisigAddresses(card) {
   }
 }
 
+
 async function state_deploy(card) {
   currentData.state = STATE_DEPLOYING;
   const initialDeployerAddress = await card.getAddress(1);
@@ -222,18 +224,24 @@ async function state_multisigCollecting(card) {
 
   if (numOfCollectedMultisigTxs === getNumberOfRequiredSignatures(currentData.collectedSafeAddresses.length)) {
     // we now have all signatures, move forward.
-    currentData.state = STATE_MULTISIGSENDING;
-
-    await gnosisSafe.sendMultisigTransaction(web3,
-      card, currentData.currentGnosisSafeAddress, currentData.multisigTransaction, currentData.multisigTransactionHash,
-      currentData.multisigCollected);
-
-    currentData.state = STATE_MULTISIGSUCCESS;
+    currentData.state = STATE_MULTISIGCOLLECTED;
   } else {
     console.log(
-      `waiting for further transactions.${numOfCollectedMultisigTxs} / ${getNumberOfRequiredSignatures(currentData.collectedSafeAddresses.length)}`,
+      `waiting for further transactions.${numOfCollectedMultisigTxs} / 
+      ${getNumberOfRequiredSignatures(currentData.collectedSafeAddresses.length)}`,
     );
   }
+}
+
+async function state_multisigCollected(card) {
+  // we now have all signatures, move forward.
+  currentData.state = STATE_MULTISIGSENDING;
+
+  await gnosisSafe.sendMultisigTransaction(web3,
+    card, currentData.currentGnosisSafeAddress, currentData.multisigTransaction, currentData.multisigTransactionHash,
+    currentData.multisigCollected);
+
+  currentData.state = STATE_MULTISIGSUCCESS;
 }
 
 async function state_multisigSetup(card) {
@@ -393,6 +401,8 @@ pcsc.on('reader', (reader) => {
               currentData.lastError = `error:${error}`;
               currentData.state = STATE_MULTISIGCOLLECTING;
             }
+          } else if (currentData.state === STATE_MULTISIGCOLLECTED) {
+            await state_multisigCollected(card);
           } else {
             console.error(`state not implemented yet: ${currentData.state}`);
           }
