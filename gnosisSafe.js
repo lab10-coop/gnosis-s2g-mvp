@@ -146,11 +146,11 @@ module.exports = {
   async deployNewSafe(web3, card) {
     return deployContract(web3, 'GnosisSafe', card);
   },
-  async setupSafe(web3, gnosisSafeAddress, addresses, card) {
+  async setupSafe(web3, gnosisSafeAddress, addresses, numberOfRequiredAddresses, card) {
     const gnosisSafeContract = createGnosisSafeObject(web3, gnosisSafeAddress);
     const zeroAddress = '0x0000000000000000000000000000000000000000';
     const setupEncodedAbi = gnosisSafeContract.methods.setup(
-      addresses, addresses.length, zeroAddress/* to */, '0x0' /* data */,
+      addresses, numberOfRequiredAddresses, zeroAddress/* to */, '0x0' /* data */,
       zeroAddress /* address paymentToken */, '0x0' /* uint256 payment */,
       zeroAddress, /* address payable paymentReceiver */
     ).encodeABI();

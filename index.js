@@ -103,7 +103,6 @@ const STATE_MULTISIGCOLLECTING = 'multiSigCollecting';
 const STATE_MULTISIGSENDING = 'multiSigSending';
 const STATE_MULTISIGSUCCESS = 'multisigSuccess';
 
-
 currentData.currentGnosisSafeAddress = '';
 currentData.state = STATE_DEPLOY;
 // array of '0xabc..890' string with the addresses that should get added to the safe.
@@ -115,9 +114,36 @@ currentData.multisigCollected = {}; // map with the safeAddress as index and a s
 currentData.multisigTransaction = undefined;
 currentData.multisigTransactionHash = '';
 
+// address of the first account that deployed the gnosis safe.
+// this field is just been used as a gimmick so we only have "Laying Cards" as User Input Interface.
+// without that field we have at leased to click one time a button to signal "continue and setup safe".
+currentData.initialDeployerAddress = '';
+
 // currentData = debugState;
 
+function getNumberOfRequiredSignatures(numberOfSignatures) {
+  if (numberOfSignatures > 2) {
+    return numberOfSignatures - 1;
+  }
+  return numberOfSignatures;
+}
+
+
 /* eslint-disable camelcase */
+
+async function setupSafe(card) {
+  console.log('setting up safe');
+  currentData.state = STATE_SETTINGUPSAFE;
+  const setupSafeResult = await gnosisSafe.setupSafe(
+    web3, currentData.currentGnosisSafeAddress, currentData.collectedSafeAddresses,
+    getNumberOfRequiredSignatures(currentData.collectedSafeAddresses.length), card,
+  );
+
+  if (setupSafeResult) {
+    console.log('setting up safe done!');
+    currentData.state = STATE_SAFEREADY;
+  }
+}
 
 async function state_collectingMultisigAddresses(card) {
   if (!currentData.currentGnosisSafeAddress) {
@@ -125,6 +151,14 @@ async function state_collectingMultisigAddresses(card) {
     return;
   }
   const cardAddress = await card.getAddress(1);
+
+  // we interpete laying the "initial deployer address" card as
+  // "all multisig cards became added, now continue with gnosis safe initialisation"
+  if (cardAddress === currentData.initialDeployerAddress) {
+    currentData.state = STATE_SETUPSAFE;
+    setupSafe(card);
+    return;
+  }
 
   if (currentData.collectedSafeAddresses.indexOf(cardAddress) === -1) {
     console.log(`Setup Safe: new multi sig enabled address: ${cardAddress}`);
@@ -136,12 +170,14 @@ async function state_collectingMultisigAddresses(card) {
 
 async function state_deploy(card) {
   currentData.state = STATE_DEPLOYING;
+  const initialDeployerAddress = await card.getAddress(1);
   const deployedSafe = await gnosisSafe.deployNewSafe(web3, card);
   console.log('deployedSafe=>');
   console.log(deployedSafe.address);
   currentData.state = STATE_DEPLOYED;
   currentData.currentGnosisSafeAddress = deployedSafe.address;
   currentData.collectedSafeAddresses = [];
+  currentData.initialDeployerAddress = initialDeployerAddress;
   return deployedSafe;
 }
 
@@ -184,7 +220,7 @@ async function state_multisigCollecting(card) {
   const numOfCollectedMultisigTxs = Object.keys(currentData.multisigCollected).length;
   console.log(`numOfCollectedMultisigTxs : ${numOfCollectedMultisigTxs}`);
 
-  if (numOfCollectedMultisigTxs === currentData.collectedSafeAddresses.length) {
+  if (numOfCollectedMultisigTxs === getNumberOfRequiredSignatures(currentData.collectedSafeAddresses.length)) {
     // we now have all signatures, move forward.
     currentData.state = STATE_MULTISIGSENDING;
 
@@ -195,7 +231,7 @@ async function state_multisigCollecting(card) {
     currentData.state = STATE_MULTISIGSUCCESS;
   } else {
     console.log(
-      `waiting for further transactions.${numOfCollectedMultisigTxs} / ${currentData.collectedSafeAddresses.length}`,
+      `waiting for further transactions.${numOfCollectedMultisigTxs} / ${getNumberOfRequiredSignatures(currentData.collectedSafeAddresses.length)}`,
     );
   }
 }
@@ -270,18 +306,6 @@ app.listen(localWebserverListeningPort);
 
 // var web3 = new Web3('http://127.0.0.1:9545/');
 
-async function setupSafe(card) {
-  console.log('setting up safe');
-  currentData.state = STATE_SETTINGUPSAFE;
-  const setupSafeResult = await gnosisSafe.setupSafe(
-    web3, currentData.currentGnosisSafeAddress, currentData.collectedSafeAddresses, card,
-  );
-
-  if (setupSafeResult) {
-    console.log('setting up safe done!');
-    currentData.state = STATE_SAFEREADY;
-  }
-}
 
 function newCard(reader) {
   const card = new Security2GoCard.Security2GoCard(reader);
