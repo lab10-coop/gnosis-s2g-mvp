@@ -82,7 +82,9 @@ function updateUI() {
 
   function setStateMachineStyle(stateName) {
     const divElement = document.getElementById(`status_${stateName}`);
-    divElement.style.textDecoration = (currentData.state === stateName) ? 'underline' : 'none';
+    if (divElement) {
+      divElement.style.textDecoration = (currentData.state === stateName) ? 'underline' : 'none';
+    }
   }
 
   errorLine.innerText = currentData.lastError;
