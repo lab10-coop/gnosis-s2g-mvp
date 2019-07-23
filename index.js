@@ -16,20 +16,6 @@ const gnosisSafe = require('./gnosisSafe.js');
 
 const pcsc = Pcsc();
 
-
-// const debugState = {
-//   currentGnosisSafeAddress: '0x437Ae985227574721f1Cf00d62A6F1Eb57D8BAC9', state: 'setupSafe', collectedSafeAddresses: ['0xe856a0cad6368c541cf11d9d9c8554b156fa40fd', '0x4abb023f60997bfbeeadb38e0caabd8b623bf2d3'], lastError: "error:Error: Connection refused or URL couldn't be resolved: https://rpc.tau1.artis.network", multisigPayoutAddress: '', multisigCollected: {}, multisigTransactionHash: '',
-// };
-
-// interface SignedTransaction {
-//   messageHash: string,
-//   v: string,
-//   r: string,
-//   s: string,
-//   rawTransaction: string
-// }
-
-
 const cardSigner = new Security2GoCard.MinervaCardSigner();
 
 const web3Options = {
