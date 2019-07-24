@@ -409,23 +409,26 @@ class Security2GoCard {
     this.logSigning('address');
     this.logSigning(address);
 
-    console.log(`rawTransaction: ${JSON.stringify(rawTransaction)}`);
+    // console.log(`rawTransaction: ${JSON.stringify(rawTransaction)}`);
     const transaction = JSON.parse(JSON.stringify(rawTransaction));
 
     if (!transaction.nonce) {
       transaction.nonce = web3.utils.toHex(await web3.eth.getTransactionCount(address));
     }
 
+    // todo: is it safe to not add the "from" addres ?
+    // maybe we should throw an error if "from" is not the signing card ?
     // if (!transaction.from) {
     //   transaction.from = address;
     // }
+
 
     // removed EIP-155 transaction for now
     // since it caused invalid signatures.
 
     transaction.chainId = undefined;
 
-    console.log('transaction at signing state', transaction);
+    // console.log('transaction at signing state', transaction);
 
     const tx = new Tx(transaction);
 
@@ -453,17 +456,6 @@ class Security2GoCard {
     tx.v = rsSig.v;
 
     result.rawTransaction = toHex(tx.serialize());
-
-    console.log('transaction:', result);
-
-
-    const recoveredAddress = web3.eth.accounts.recoverTransaction(result.rawTransaction);
-
-    if (address !== recoveredAddress.toLowerCase()) {
-      console.error('strange things happen, address i not that what address should be!');
-    } else {
-      console.error('everything OK: could recover correct address from the signed Transaction');
-    }
 
     return result;
   }
