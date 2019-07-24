@@ -37,12 +37,13 @@ async function sendTx(web3, toAddress, encodedAbi, card) {
     to: toAddress,
   };
 
-  const signature = await card.signTransaction(web3, rawTx, 1);
+  // const signature = await card.signTransaction(web3, rawTx, 1);
 
-  logDebug(signature.toString('hex'));
-  const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
+  // logDebug(signature.toString('hex'));
+  // const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
 
-  // const txResult = await web3.eth.sendTransaction(rawTx);
+
+  const txResult = await web3.eth.sendTransaction(rawTx);
   console.log('Transaction sent!');
   return txResult;
 }
@@ -80,16 +81,12 @@ async function deployContract(web3, contractName, card) {
     from: address,
   };
 
-  // const tx = new Tx(rawTx);
-  // const txResult = await web3.eth.sendTransaction(rawTx);
-
-  const signature = await card.signTransaction(web3, rawTx, cardKeyIndex);
-
-  logDebug(signature.toString('hex'));
-  const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
+  // const signature = await card.signTransaction(web3, rawTx, cardKeyIndex);
+  // logDebug(signature.toString('hex'));
+  // const txResult = await web3.eth.sendSignedTransaction(signature.toString('hex'));
 
 
-  // const txResult = await web3.eth.sendTransaction(rawTx);
+  const txResult = await web3.eth.sendTransaction(rawTx);
 
   logDebug('Contract deployed:');
   logDebug(txResult);

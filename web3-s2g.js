@@ -416,6 +416,17 @@ class Security2GoCard {
       transaction.nonce = web3.utils.toHex(await web3.eth.getTransactionCount(address));
     }
 
+    // if (!transaction.from) {
+    //   transaction.from = address;
+    // }
+
+    // removed EIP-155 transaction for now
+    // since it caused invalid signatures.
+
+    transaction.chainId = undefined;
+
+    console.log('transaction at signing state', transaction);
+
     const tx = new Tx(transaction);
 
     const result = {
@@ -444,6 +455,16 @@ class Security2GoCard {
     result.rawTransaction = toHex(tx.serialize());
 
     console.log('transaction:', result);
+
+
+    const recoveredAddress = web3.eth.accounts.recoverTransaction(result.rawTransaction);
+
+    if (address !== recoveredAddress.toLowerCase()) {
+      console.error('strange things happen, address i not that what address should be!');
+    } else {
+      console.error('everything OK: could recover correct address from the signed Transaction');
+    }
+
     return result;
   }
 
@@ -504,13 +525,7 @@ class MinervaCardSigner {
   async sign(rawTx) {
     console.log('signing with MinervaCardSigner');
     const signedTransaction = await this.card.getSignedTransaction(this.web3, rawTx, this.cardKeyIndex);
-
-    // console.log(`signed with MinervaCardSigner r: ${signedTransaction.r}`);
-    // console.log(`signed with MinervaCardSigner: ${JSON.stringify(signedTransaction)}`);
-
-    const recoveredTransaction = this.web3.eth.accounts.recoverTransaction(signedTransaction.rawTransaction);
-    console.log(`recovered account: ${recoveredTransaction}`);
-
+    console.log(`signed with MinervaCardSigner: ${JSON.stringify(signedTransaction)}`);
     return signedTransaction;
   }
 }

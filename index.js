@@ -108,6 +108,7 @@ currentData.initialDeployerAddress = '';
 
 // currentData = debugState;
 
+
 function getNumberOfRequiredSignatures(numberOfSignatures) {
   if (numberOfSignatures > 2) {
     return numberOfSignatures - 1;
@@ -367,6 +368,31 @@ pcsc.on('reader', (reader) => {
         currentData.lastError = '';
         try {
           const card = newCard(reader);
+
+
+          // const testTransaction = {
+          //   from: '0xb222330cA92307D639b0bEd948Fe4F3577Fc500B',
+          //   to: '0xb222330cA92307D639b0bEd948Fe4F3577Fc500B',
+          //   value: '0x10',
+          //   gas: web3.utils.toHex('21000'),
+          //   gasPrice: web3.utils.toHex('100000000000'),
+          // };
+
+          // console.log('START signTransaction())');
+          // const signedTransaction = await card.signTransaction(web3, testTransaction, 1);
+          // console.log('END signTransaction())');
+          // console.log(`got signedTransaction (method: signTransaction()) ${signedTransaction}`);
+          // console.log('sending signed Transaction:');
+          // const testTransactionResultDirect = await web3.eth.sendSignedTransaction(signedTransaction);
+          // console.log('sent sendSignedTransaction :', testTransactionResultDirect);
+          // const testTransactionResult = await web3.eth.sendTransaction(testTransaction);
+          // console.log('Transaction Sent:', testTransactionResult);
+
+          //
+
+
+          // return;
+
           if (currentData.state === STATE_COLLECTINGMULTISIGADDRESSES) {
             await state_collectingMultisigAddresses(card);
           } else if (currentData.state === STATE_DEPLOY) {
