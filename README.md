@@ -16,6 +16,7 @@ the Web UI guides you through different steps of the lifetime of a Safe:
 # Requirements
 
 - A NFC Card reader that is supported by [PCSC lite](https://pcsclite.apdu.fr/)
+- In order to install the package you need to have installed in the system the pcsclite libraries. For example, in Debian/Ubuntu: `apt-get install libpcsclite1 libpcsclite-dev`
 - Access to an Ethereum compatible blockchain - we use [ARTIS](https://artis.eco) tau1 (testnet) in this example
 - At least one Security2Go NFC Card (3 recommended - 1 for setting up and funding the Safe, 2 for multisig)
     -   with address at index 1 initialised
