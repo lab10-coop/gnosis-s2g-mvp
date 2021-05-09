@@ -30,7 +30,7 @@
     "rlp": "^2.2.3",
     "web3": "^1.0.0-beta.55",
     "web3-utils": "^1.0.0-beta.55",
-    "lodash": ">=4.17.13"
+    "lodash": ">=4.17.21"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
