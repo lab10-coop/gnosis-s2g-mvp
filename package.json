@@ -24,7 +24,7 @@
   "dependencies": {
     "ethereumjs-tx": "^1.3.7",
     "ethereumjs-util": "^6.1.0",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "path": "^0.12.7",
     "pcsclite": "^0.6.0",
     "rlp": "^2.2.3",
